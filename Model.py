@@ -267,7 +267,7 @@ class Fileupload(db.Model):
     
     # get file by business
     def getFileByBusinesId(id, page=1, per_page=10): 
-        pagination = Apikey.query.filter_by(apikey_id=id).paginate(page=page, per_page=per_page, error_out=False)
+        pagination = Fileupload.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
         # Extract the items for the current page
         new_data = pagination.items
         # Render nested objects
