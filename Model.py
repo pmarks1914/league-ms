@@ -139,7 +139,6 @@ class User(db.Model):
                     'account_type': user.account_type, 
                     'created_by': user.created_by,
                     'updated_by': user.updated_by,
-                    'business_id': user.business_id, 
                     'created_on': user.created_on.strftime("%Y-%m-%d %H:%M:%S"),
                     'updated_on': user.updated_on.strftime("%Y-%m-%d %H:%M:%S")
                 }
