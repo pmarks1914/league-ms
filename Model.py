@@ -76,9 +76,9 @@ class User(db.Model):
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the Business table
-    business_id = db.Column(db.String(36), db.ForeignKey('business.business_id'))
+    # business_id = db.Column(db.String(36), db.ForeignKey('business.business_id'))
     # Define a relationship to access the Business object from a User object
-    business = db.relationship('Business', back_populates='user')
+    # business = db.relationship('Business', back_populates='user')
     
     def json(self):
         return {
@@ -121,7 +121,8 @@ class User(db.Model):
     def getAllUsers(_email):
         joined_table_data = []
         # user_data = db.session.query(User).filter_by(email=_email).join(Business).all()
-        user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
+        # user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
+        user_data = db.session.query(User).filter_by(email=_email).all()
 
         # get joined tables data
         for user, business in user_data:
@@ -141,23 +142,6 @@ class User(db.Model):
                     'business_id': user.business_id, 
                     'created_on': user.created_on.strftime("%Y-%m-%d %H:%M:%S"),
                     'updated_on': user.updated_on.strftime("%Y-%m-%d %H:%M:%S")
-                },
-                'business': {
-                    'business_name': business.business_name,
-                    'business_id': business.business_id,
-                    'business_name': business.business_name,
-                    'email': business.email,
-                    'phone': business.phone,
-                    'digital_address': business.digital_address,
-                    'address': business.address,
-                    'business_account_status': business.business_account_status,
-                    'created_by': business.created_by,
-                    'updated_by': business.updated_by,
-                    'created_on': business.created_on.strftime("%Y-%m-%d %H:%M:%S"),
-                    'updated_on': business.updated_on.strftime("%Y-%m-%d %H:%M:%S"),
-                    'kyc_id': business.kyc_id,
-                    'settlement_id': business.settlement_id,
-                    'apikey_id': business.apikey_id
                 }
             })
         # Convert the result to a JSON-formatted string
@@ -267,7 +251,7 @@ class Fileupload(db.Model):
     
     # get file by business
     def getFileByBusinesId(id, page=1, per_page=10): 
-        pagination = Apikey.query.filter_by(apikey_id=id).paginate(page=page, per_page=per_page, error_out=False)
+        pagination = Fileupload.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
         # Extract the items for the current page
         new_data = pagination.items
         # Render nested objects
