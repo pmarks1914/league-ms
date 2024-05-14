@@ -142,23 +142,6 @@ class User(db.Model):
                     'business_id': user.business_id, 
                     'created_on': user.created_on.strftime("%Y-%m-%d %H:%M:%S"),
                     'updated_on': user.updated_on.strftime("%Y-%m-%d %H:%M:%S")
-                },
-                'business': {
-                    'business_name': business.business_name,
-                    'business_id': business.business_id,
-                    'business_name': business.business_name,
-                    'email': business.email,
-                    'phone': business.phone,
-                    'digital_address': business.digital_address,
-                    'address': business.address,
-                    'business_account_status': business.business_account_status,
-                    'created_by': business.created_by,
-                    'updated_by': business.updated_by,
-                    'created_on': business.created_on.strftime("%Y-%m-%d %H:%M:%S"),
-                    'updated_on': business.updated_on.strftime("%Y-%m-%d %H:%M:%S"),
-                    'kyc_id': business.kyc_id,
-                    'settlement_id': business.settlement_id,
-                    'apikey_id': business.apikey_id
                 }
             })
         # Convert the result to a JSON-formatted string
