@@ -124,7 +124,7 @@ class User(db.Model):
         # user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
         user_data = db.session.query(User).filter_by(email=_email).all()
 
-        # get joined tables data
+        # get joined tables data .
         for user in user_data:
             joined_table_data.append({
                 'user': {
