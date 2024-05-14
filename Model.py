@@ -76,9 +76,9 @@ class User(db.Model):
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the Business table
-    business_id = db.Column(db.String(36), db.ForeignKey('business.business_id'))
+    # business_id = db.Column(db.String(36), db.ForeignKey('business.business_id'))
     # Define a relationship to access the Business object from a User object
-    business = db.relationship('Business', back_populates='user')
+    # business = db.relationship('Business', back_populates='user')
     
     def json(self):
         return {
@@ -121,7 +121,8 @@ class User(db.Model):
     def getAllUsers(_email):
         joined_table_data = []
         # user_data = db.session.query(User).filter_by(email=_email).join(Business).all()
-        user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
+        # user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
+        user_data = db.session.query(User).filter_by(email=_email).all()
 
         # get joined tables data
         for user, business in user_data:
