@@ -345,72 +345,6 @@ class Application(db.Model):
     student = db.relationship('Student', back_populates='application')
     programme = db.relationship('Programme', back_populates='application')
 
-    def create_application(session: Session, description: str = None, **kwargs) -> Application:
-        try:
-            application = Application(description=description, **kwargs)
-            session.add(application)
-            session.commit()
-            logger.info(f"Application created with ID: {application.id}")
-            return application
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Error creating application: {e}")
-            raise
-
-    def get_application_by_id(session: Session, application_id: str) -> Application:
-        try:
-            application = session.query(Application).filter(Application.id == application_id).one_or_none()
-            if application:
-                logger.info(f"Application retrieved with ID: {application_id}")
-            else:
-                logger.warning(f"No application found with ID: {application_id}")
-            return application
-        except Exception as e:
-            logger.error(f"Error retrieving application by ID: {e}")
-            raise
-
-    def get_all_applications(session: Session) -> list:
-        try:
-            applications = session.query(Application).all()
-            logger.info(f"Retrieved {len(applications)} applications")
-            return applications
-        except Exception as e:
-            logger.error(f"Error retrieving all applications: {e}")
-            raise
-
-    def update_application(session: Session, application_id: str, **kwargs) -> Application:
-        try:
-            application = session.query(Application).filter(Application.id == application_id).one_or_none()
-            if application:
-                for key, value in kwargs.items():
-                    setattr(application, key, value)
-                application.updated_on = datetime.utcnow()
-                session.commit()
-                logger.info(f"Application updated with ID: {application.id}")
-            else:
-                logger.warning(f"No application found with ID: {application_id}")
-            return application
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Error updating application: {e}")
-            raise
-
-    def delete_application(session: Session, application_id: str) -> bool:
-        try:
-            application = session.query(Application).filter(Application.id == application_id).one_or_none()
-            if application:
-                session.delete(application)
-                session.commit()
-                logger.info(f"Application deleted with ID: {application_id}")
-                return True
-            else:
-                logger.warning(f"No application found with ID: {application_id}")
-                return False
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Error deleting application: {e}")
-            raise
-
 class Programme(db.Model):
     __tablename__ = 'programme'
     id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
@@ -429,6 +363,71 @@ class Programme(db.Model):
     # Define a relationship to access the application object from a User object
     application = db.relationship('Application', back_populates='application')
 
+    def create_programme(session: Session, school_id: str, application_id: str, name: str = None, description: str = None, **kwargs) -> Programme:
+        try:
+            programme = Programme(school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
+            session.add(programme)
+            session.commit()
+            logger.info(f"Programme created with ID: {programme.id}")
+            return programme
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating programme: {e}")
+            raise
+
+    def get_programme_by_id(session: Session, programme_id: str) -> Programme:
+        try:
+            programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            if programme:
+                logger.info(f"Programme retrieved with ID: {programme_id}")
+            else:
+                logger.warning(f"No programme found with ID: {programme_id}")
+            return programme
+        except Exception as e:
+            logger.error(f"Error retrieving programme by ID: {e}")
+            raise
+
+    def get_all_programmes(session: Session) -> list:
+        try:
+            programmes = session.query(Programme).all()
+            logger.info(f"Retrieved {len(programmes)} programmes")
+            return programmes
+        except Exception as e:
+            logger.error(f"Error retrieving all programmes: {e}")
+            raise
+
+    def update_programme(session: Session, programme_id: str, **kwargs) -> Programme:
+        try:
+            programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            if programme:
+                for key, value in kwargs.items():
+                    setattr(programme, key, value)
+                programme.updated_on = datetime.utcnow()
+                session.commit()
+                logger.info(f"Programme updated with ID: {programme.id}")
+            else:
+                logger.warning(f"No programme found with ID: {programme_id}")
+            return programme
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating programme: {e}")
+            raise
+
+    def delete_programme(session: Session, programme_id: str) -> bool:
+    try:
+        programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+        if programme:
+            session.delete(programme)
+            session.commit()
+            logger.info(f"Programme deleted with ID: {programme_id}")
+            return True
+        else:
+            logger.warning(f"No programme found with ID: {programme_id}")
+            return False
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error deleting programme: {e}")
+        raise
 
 
 
