@@ -108,12 +108,11 @@ def user(id):
     else:
         return {"code": 400, "message": 'Failed' }
         
-@app.route('/v1/business/registration/', methods=['POST'])
+@app.route('/v1/registration/', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
     msg = {}
     # print("fff")
-    role = 'BUSINESS' # user role
     try:
         password = hashlib.sha256((request_data['password']).encode()).hexdigest()  
         if User.query.filter_by(email=request_data['email']).first() is None:
@@ -187,4 +186,4 @@ def fileDelete(id):
         pass
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)

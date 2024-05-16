@@ -64,21 +64,16 @@ class User(db.Model):
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(80), unique=True, nullable=False)
-    phone = db.Column(db.String(15), nullable=True) # datatype
     first_name = db.Column(db.String(80), nullable=True)
     last_name = db.Column(db.String(80), nullable=True)
     other_name = db.Column(db.String(80), nullable=True)
-    logo = db.Column(db.String(120), nullable=True)
-    account_type = db.Column(db.String(22), nullable=True) 
     active_status = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    # Add a foreign key, reference to the Business table
-    # business_id = db.Column(db.String(36), db.ForeignKey('business.business_id'))
-    # Define a relationship to access the Business object from a User object
-    # business = db.relationship('Business', back_populates='user')
+    school = db.relationship('School', back_populates='user')
+    student = db.relationship('Student', back_populates='user')
     
     def json(self):
         return {
@@ -124,8 +119,8 @@ class User(db.Model):
         # user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
         user_data = db.session.query(User).filter_by(email=_email).all()
 
-        # get joined tables data
-        for user, business in user_data:
+        # get joined tables data .
+        for user in user_data:
             joined_table_data.append({
                 'user': {
                     'id': user.id,
@@ -139,7 +134,6 @@ class User(db.Model):
                     'account_type': user.account_type, 
                     'created_by': user.created_by,
                     'updated_by': user.updated_by,
-                    'business_id': user.business_id, 
                     'created_on': user.created_on.strftime("%Y-%m-%d %H:%M:%S"),
                     'updated_on': user.updated_on.strftime("%Y-%m-%d %H:%M:%S")
                 }
@@ -151,7 +145,6 @@ class User(db.Model):
     def createUser(_first_name, _last_name, _other_name, _business_name, _password, _email, _phone, _description, _role, _digital_address, _address, business_detail):
         user_id = str(uuid.uuid4())
         new_user = User( email=_email, password=_password, role=_role, phone=_phone, first_name=_first_name, last_name=_last_name, other_name=_other_name, created_by=_email, updated_by=_email, business_id=business_detail.business_id, id=user_id )
- 
         try:
             # Start a new session
             with app.app_context():
@@ -171,13 +164,338 @@ class User(db.Model):
             # print(_key, _value, _user_data)
             _user_data.password = password
             # print(password)
-            
         db.session.commit()
 
     def delete_user(_id):
         is_successful = User.query.filter_by(id=_id).delete()
         db.session.commit()
         return bool(is_successful)
+
+class School(db.Model):
+    __tablename__ = 'school'
+    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    name = db.Column(db.String(80), nullable=True)
+    description = db.Column(db.String(80), nullable=True)
+    created_by = db.Column(db.String(80), nullable=True)
+    updated_by = db.Column(db.String(80), nullable=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    programme = db.relationship('Programme', back_populates='school')
+    # Add a foreign key, reference to the User table
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
+    # Define a relationship to access the User object from a User object
+    user = db.relationship('User', back_populates='school')
+
+
+    def create_school(session: Session, user_id: str, name: str = None, description: str = None, **kwargs) -> School:
+        try:
+            school = School(user_id=user_id, name=name, description=description, **kwargs)
+            session.add(school)
+            session.commit()
+            logger.info(f"School created with ID: {school.id}")
+            return school
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating school: {e}")
+            raise
+
+    def get_school_by_id(session: Session, school_id: str) -> School:
+        try:
+            school = session.query(School).filter(School.id == school_id).one_or_none()
+            if school:
+                logger.info(f"School retrieved with ID: {school_id}")
+            else:
+                logger.warning(f"No school found with ID: {school_id}")
+            return school
+        except Exception as e:
+            logger.error(f"Error retrieving school by ID: {e}")
+            raise
+
+    def get_all_schools(session: Session) -> list:
+        try:
+            schools = session.query(School).all()
+            logger.info(f"Retrieved {len(schools)} schools")
+            return schools
+        except Exception as e:
+            logger.error(f"Error retrieving all schools: {e}")
+            raise
+
+    def update_school(session: Session, school_id: str, **kwargs) -> School:
+        try:
+            school = session.query(School).filter(School.id == school_id).one_or_none()
+            if school:
+                for key, value in kwargs.items():
+                    setattr(school, key, value)
+                school.updated_on = datetime.utcnow()
+                session.commit()
+                logger.info(f"School updated with ID: {school.id}")
+            else:
+                logger.warning(f"No school found with ID: {school_id}")
+            return school
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating school: {e}")
+            raise
+
+    def delete_school(session: Session, school_id: str) -> bool:
+        try:
+            school = session.query(School).filter(School.id == school_id).one_or_none()
+            if school:
+                session.delete(school)
+                session.commit()
+                logger.info(f"School deleted with ID: {school_id}")
+                return True
+            else:
+                logger.warning(f"No school found with ID: {school_id}")
+                return False
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error deleting school: {e}")
+            raise
+
+class Student(db.Model):
+    __tablename__ = 'student'
+    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    description = db.Column(db.String(80), nullable=True)
+    created_by = db.Column(db.String(80), nullable=True)
+    updated_by = db.Column(db.String(80), nullable=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Add a foreign key, reference to the User table
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
+    application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
+    # Define a relationship to access the User object from a User object
+    user = db.relationship('User', back_populates='student')
+
+    def create_student(session: Session, user_id: str, application_id: str, description: str = None, **kwargs) -> Student:
+        try:
+            student = Student(user_id=user_id, application_id=application_id, description=description, **kwargs)
+            session.add(student)
+            session.commit()
+            logger.info(f"Student created with ID: {student.id}")
+            return student
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating student: {e}")
+            raise
+
+    def get_student_by_id(session: Session, student_id: str) -> Student:
+        try:
+            student = session.query(Student).filter(Student.id == student_id).one_or_none()
+            if student:
+                logger.info(f"Student retrieved with ID: {student_id}")
+            else:
+                logger.warning(f"No student found with ID: {student_id}")
+            return student
+        except Exception as e:
+            logger.error(f"Error retrieving student by ID: {e}")
+            raise
+
+    def get_all_students(session: Session) -> list:
+        try:
+            students = session.query(Student).all()
+            logger.info(f"Retrieved {len(students)} students")
+            return students
+        except Exception as e:
+            logger.error(f"Error retrieving all students: {e}")
+            raise
+
+    def update_student(session: Session, student_id: str, **kwargs) -> Student:
+        try:
+            student = session.query(Student).filter(Student.id == student_id).one_or_none()
+            if student:
+                for key, value in kwargs.items():
+                    setattr(student, key, value)
+                student.updated_on = datetime.utcnow()
+                session.commit()
+                logger.info(f"Student updated with ID: {student.id}")
+            else:
+                logger.warning(f"No student found with ID: {student_id}")
+            return student
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating student: {e}")
+            raise
+
+    def delete_student(session: Session, student_id: str) -> bool:
+        try:
+            student = session.query(Student).filter(Student.id == student_id).one_or_none()
+            if student:
+                session.delete(student)
+                session.commit()
+                logger.info(f"Student deleted with ID: {student_id}")
+                return True
+            else:
+                logger.warning(f"No student found with ID: {student_id}")
+                return False
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error deleting student: {e}")
+            raise
+
+
+class Application(db.Model):
+    __tablename__ = 'application'
+    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    description = db.Column(db.String(80), nullable=True)
+    created_by = db.Column(db.String(80), nullable=True)
+    updated_by = db.Column(db.String(80), nullable=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    student = db.relationship('Student', back_populates='application')
+    programme = db.relationship('Programme', back_populates='application')
+
+    def create_application(session: Session, description: str = None, **kwargs) -> Application:
+        try:
+            application = Application(description=description, **kwargs)
+            session.add(application)
+            session.commit()
+            logger.info(f"Application created with ID: {application.id}")
+            return application
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating application: {e}")
+            raise
+
+    def get_application_by_id(session: Session, application_id: str) -> Application:
+        try:
+            application = session.query(Application).filter(Application.id == application_id).one_or_none()
+            if application:
+                logger.info(f"Application retrieved with ID: {application_id}")
+            else:
+                logger.warning(f"No application found with ID: {application_id}")
+            return application
+        except Exception as e:
+            logger.error(f"Error retrieving application by ID: {e}")
+            raise
+
+    def get_all_applications(session: Session) -> list:
+        try:
+            applications = session.query(Application).all()
+            logger.info(f"Retrieved {len(applications)} applications")
+            return applications
+        except Exception as e:
+            logger.error(f"Error retrieving all applications: {e}")
+            raise
+
+    def update_application(session: Session, application_id: str, **kwargs) -> Application:
+        try:
+            application = session.query(Application).filter(Application.id == application_id).one_or_none()
+            if application:
+                for key, value in kwargs.items():
+                    setattr(application, key, value)
+                application.updated_on = datetime.utcnow()
+                session.commit()
+                logger.info(f"Application updated with ID: {application.id}")
+            else:
+                logger.warning(f"No application found with ID: {application_id}")
+            return application
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating application: {e}")
+            raise
+
+    def delete_application(session: Session, application_id: str) -> bool:
+        try:
+            application = session.query(Application).filter(Application.id == application_id).one_or_none()
+            if application:
+                session.delete(application)
+                session.commit()
+                logger.info(f"Application deleted with ID: {application_id}")
+                return True
+            else:
+                logger.warning(f"No application found with ID: {application_id}")
+                return False
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error deleting application: {e}")
+            raise
+
+class Programme(db.Model):
+    __tablename__ = 'programme'
+    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    name = db.Column(db.String(80), nullable=True)
+    description = db.Column(db.String(80), nullable=True)
+    created_by = db.Column(db.String(80), nullable=True)
+    updated_by = db.Column(db.String(80), nullable=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Add a foreign key, reference to the school table
+    school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
+    # Add a foreign key, reference to the application table
+    application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
+    # Define a relationship to access the school object from a User object
+    school = db.relationship('School', back_populates='programme')
+    # Define a relationship to access the application object from a User object
+    application = db.relationship('Application', back_populates='application')
+
+    def create_programme(session: Session, school_id: str, application_id: str, name: str = None, description: str = None, **kwargs) -> Programme:
+        try:
+            programme = Programme(school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
+            session.add(programme)
+            session.commit()
+            logger.info(f"Programme created with ID: {programme.id}")
+            return programme
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating programme: {e}")
+            raise
+
+    def get_programme_by_id(session: Session, programme_id: str) -> Programme:
+        try:
+            programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            if programme:
+                logger.info(f"Programme retrieved with ID: {programme_id}")
+            else:
+                logger.warning(f"No programme found with ID: {programme_id}")
+            return programme
+        except Exception as e:
+            logger.error(f"Error retrieving programme by ID: {e}")
+            raise
+
+    def get_all_programmes(session: Session) -> list:
+        try:
+            programmes = session.query(Programme).all()
+            logger.info(f"Retrieved {len(programmes)} programmes")
+            return programmes
+        except Exception as e:
+            logger.error(f"Error retrieving all programmes: {e}")
+            raise
+
+    def update_programme(session: Session, programme_id: str, **kwargs) -> Programme:
+        try:
+            programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            if programme:
+                for key, value in kwargs.items():
+                    setattr(programme, key, value)
+                programme.updated_on = datetime.utcnow()
+                session.commit()
+                logger.info(f"Programme updated with ID: {programme.id}")
+            else:
+                logger.warning(f"No programme found with ID: {programme_id}")
+            return programme
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating programme: {e}")
+            raise
+
+    def delete_programme(session: Session, programme_id: str) -> bool:
+    try:
+        programme = session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+        if programme:
+            session.delete(programme)
+            session.commit()
+            logger.info(f"Programme deleted with ID: {programme_id}")
+            return True
+        else:
+            logger.warning(f"No programme found with ID: {programme_id}")
+            return False
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error deleting programme: {e}")
+        raise
+
+
 
 class Code(db.Model):
     __tablename__ = 'code'
@@ -238,19 +556,15 @@ class Fileupload(db.Model):
     __tablename__ = 'file'
     id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
     file = db.Column(db.String(80), nullable=True)
+    type = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
+
     business = db.relationship('Business', back_populates='file')
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def getFileById(id):
-        new_data = db.session.query(Fileupload).filter(id==id).first()
-        # print(new_data)
-        if new_data:
-            return alchemy_to_json(new_data)
     
     # get file by business
-    def getFileByBusinesId(id, page=1, per_page=10): 
+    def getFileById(id, page=1, per_page=10): 
         pagination = Fileupload.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
         # Extract the items for the current page
         new_data = pagination.items
