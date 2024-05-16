@@ -431,6 +431,7 @@ class Programme(db.Model):
     application = db.relationship('Application', back_populates='application')
 
     def create_programme(school_id: str, application_id: str, name: str = None, description: str = None, **kwargs):
+        _id = str(uuid.uuid4())
         try:
             programme = Programme(school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
             db.session.add(programme)
