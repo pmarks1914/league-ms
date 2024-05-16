@@ -269,8 +269,9 @@ class Student(db.Model):
     user = db.relationship('User', back_populates='student')
 
     def create_student(user_id: str, application_id: str, description: str = None, **kwargs):
+        _id = str(uuid.uuid4())
         try:
-            student = Student(user_id=user_id, application_id=application_id, description=description, **kwargs)
+            student = Student(id=_id, user_id=user_id, application_id=application_id, description=description, **kwargs)
             db.session.add(student)
             db.session.commit()
             logger.info(f"Student created with ID: {student.id}")
@@ -347,8 +348,9 @@ class Application(db.Model):
     programme = db.relationship('Programme', back_populates='application')
 
     def create_application(description: str = None, **kwargs):
+        _id = str(uuid.uuid4())
         try:
-            application = Application(description=description, **kwargs)
+            application = Application(id=_id, description=description, **kwargs)
             db.session.add(application)
             db.session.commit()
             logger.info(f"Application created with ID: {application.id}")
