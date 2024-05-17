@@ -114,10 +114,18 @@ def add_user_registration():
     msg = {}
     # print("fff")
     try:
-        password = hashlib.sha256((request_data['password']).encode()).hexdigest()  
-        print(password)
-        # print(User.query.filter_by(email=request_data['email']).first())
-        if User.query.filter_by(email=request_data['email']).first() is None:
+        _password = hashlib.sha256((request_data['password']).encode()).hexdigest()  
+        _first_name = request_data['first_name']
+        _last_name = request_data['last_name']
+        _other_name = request_data['other_name']
+        _email = request_data['email']
+        # _phone = request_data['phone']
+        _description = request_data['description']
+        _role = request_data['role']
+        _address = request_data['address']
+
+        print(User.query.filter_by(email=request_data['email']).first())
+        if User.query.filter_by(email=request_data['email']).first() is not None:
             msg = {
                 "code": 202,
                 "error": "user already registtered",
@@ -126,9 +134,11 @@ def add_user_registration():
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response
         else:
+            user = User.createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address)
+            print(user)
             invalidUserOjectErrorMsg = {
-                "code": 203,
-                "error": str(e),
+                "code": 200,
+                # "error": str(e),
             }
             response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
             return response

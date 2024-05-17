@@ -144,20 +144,20 @@ class User(db.Model):
         result_json = json.dumps(joined_table_data, indent=2)
         return  result_json
 
-    def createUser(_first_name, _last_name, _other_name, _business_name, _password, _email, _phone, _description, _role, _digital_address, _address, business_detail):
+    def createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address, **kwargs):
         user_id = str(uuid.uuid4())
-        new_user = User( email=_email, password=_password, role=_role, phone=_phone, first_name=_first_name, last_name=_last_name, other_name=_other_name, created_by=_email, updated_by=_email, business_id=business_detail.business_id, id=user_id )
+        new_user = User( email=_email, password=_password, role=_role, first_name=_first_name, last_name=_last_name, other_name=_other_name, created_by=_email, updated_by=_email, id=user_id )
         try:
             # Start a new session
             with app.app_context():
                 db.session.add(new_user)
+                db.session.commit()
         except Exception as e:
             # db.session.rollback()  # Rollback the transaction in case of an error
             print(f"Error:: {e}")
         finally:
             # db.session.close()
-            db.session.commit()
-            db.session.close()
+            pass
         return new_user
 
     def update_user(_key, _value, _user_data):
