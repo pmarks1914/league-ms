@@ -115,6 +115,8 @@ def add_user_registration():
     # print("fff")
     try:
         password = hashlib.sha256((request_data['password']).encode()).hexdigest()  
+        print(password)
+        # print(User.query.filter_by(email=request_data['email']).first())
         if User.query.filter_by(email=request_data['email']).first() is None:
             msg = {
                 "code": 202,
@@ -126,16 +128,14 @@ def add_user_registration():
         else:
             invalidUserOjectErrorMsg = {
                 "code": 203,
-                # "error": str(e),
-                "helpString": 'Data passed" }'
+                "error": str(e),
             }
             response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
             return response
     except Exception as e:
         invalidUserOjectErrorMsg = {
             "code": 204,
-            "error": str(e),
-            "helpString": 'Data passed" }'
+            "error": str(e)
         }
         response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
         return response

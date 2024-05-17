@@ -75,6 +75,7 @@ class User(db.Model):
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     school = db.relationship('School', back_populates='user')
     student = db.relationship('Student', back_populates='user')
+    # file = db.relationship('Fileupload', back_populates='user')
     
     def json(self):
         return {
@@ -186,6 +187,7 @@ class School(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
     # Define a relationship to access the User object from a User object
     user = db.relationship('User', back_populates='school')
+    file = db.relationship('Fileupload', back_populates='school')
 
 
     def create_school(user_id: str, name: str = None, description: str = None, **kwargs):
@@ -268,6 +270,7 @@ class Student(db.Model):
     application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
     # Define a relationship to access the User object from a User object
     user = db.relationship('User', back_populates='student')
+    application = db.relationship('Application', back_populates='student')
 
     def create_student(user_id: str, application_id: str, description: str = None, **kwargs):
         _id = str(uuid.uuid4())
@@ -431,7 +434,7 @@ class Programme(db.Model):
     # Define a relationship to access the school object from a User object
     school = db.relationship('School', back_populates='programme')
     # Define a relationship to access the application object from a User object
-    application = db.relationship('Application', back_populates='application')
+    application = db.relationship('Application', back_populates='programme')
 
     def create_programme(school_id: str, application_id: str, name: str = None, description: str = None, **kwargs):
         _id = str(uuid.uuid4())
@@ -512,7 +515,6 @@ class Code(db.Model):
     def createCode(_email, _code, _type):
         # cron job to delete expired used user sessions
         Code.objects.filter(update_at__lte=(timezone.now()-timedelta(seconds=5)) ).delete()
-        
         _id = str(uuid.uuid4())
         new_data = Code( account=_email, code=_code, type=_type, id=_id )
         try:
@@ -561,10 +563,15 @@ class Fileupload(db.Model):
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
-
     business = db.relationship('Business', back_populates='file')
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Add a foreign key, reference to the user table
+    # user_id = db.Column(db.String(36), db.ForeignKey('user.id'))    
+    # user = db.relationship('User', back_populates='file')
+    # Add a foreign key, reference to the school table
+    school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
+    school = db.relationship('School', back_populates='file')
     
     # get file by business
     def getFileById(id, page=1, per_page=10): 
@@ -585,7 +592,7 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _business):
+    def createFile(_file, _description, _user_id, _school_id):
         _id = str(uuid.uuid4())
         # print(_id, _file)
         new_data = Fileupload( file=_file, description=_description, id=_id )
