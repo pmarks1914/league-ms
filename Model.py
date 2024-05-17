@@ -563,7 +563,6 @@ class Fileupload(db.Model):
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
-    business = db.relationship('Business', back_populates='file')
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the user table
