@@ -75,7 +75,7 @@ class User(db.Model):
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     school = db.relationship('School', back_populates='user')
     student = db.relationship('Student', back_populates='user')
-    # file = db.relationship('Fileupload', back_populates='user')
+    file = db.relationship('Fileupload', back_populates='user')
     
     def json(self):
         return {
@@ -566,8 +566,8 @@ class Fileupload(db.Model):
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the user table
-    # user_id = db.Column(db.String(36), db.ForeignKey('user.id'))    
-    # user = db.relationship('User', back_populates='file')
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))    
+    user = db.relationship('User', back_populates='file')
     # Add a foreign key, reference to the school table
     school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
     school = db.relationship('School', back_populates='file')
