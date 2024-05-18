@@ -213,10 +213,10 @@ def update_password(id):
 def send_notification():
     data = request.get_json()
     to_email = data['email']
-    print(to_email)
+    # print(to_email)
     subject = 'Notification Subject'
     users = User.query.filter_by(email=to_email).first()
-    print(users)
+    # print(users.id)
     try:
         if users:
             code = generate_random_code()
@@ -230,7 +230,6 @@ def send_notification():
             return 'User does not exist'
     except Exception as e:
         return str(e)
-        pass
 
 @app.route('/')
 def index():

@@ -516,19 +516,23 @@ class Code(db.Model):
 
     def createCode(_email, _code, _type):
         # cron job to delete expired used user sessions
-        Code.objects.filter(update_at__lte=(timezone.now()-timedelta(seconds=5)) ).delete()
+        cutoff_time = datetime.utcnow() - timedelta(seconds=5)
+        Code.query.filter(Code.updated_on <= cutoff_time).delete()
+        db.session.commit()
+
         _id = str(uuid.uuid4())
         new_data = Code( account=_email, code=_code, type=_type, id=_id )
         try:
             # Start a new session
             with app.app_context():
                 db.session.add(new_data)
+                db.session.commit()
         except Exception as e:
             # db.session.rollback()  # Rollback the transaction in case of an error
             print(f"Error:: {e}")
         finally:
-            db.session.commit()
-            db.session.close()
+            # db.session.commit()
+            # db.session.close()
             pass
         return new_data
     
