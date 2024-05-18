@@ -111,6 +111,12 @@ class User(db.Model):
                 'business_id': self.business_id, 
                 'created_on': self.created_on,
                 'updated_on': self.updated_on })
+    def username_password_match(_username, _password ):
+        user_get = User.query.filter_by(email=_username, password=_password).first()
+        if user_get is None:
+            return False
+        else:
+            return user_get
 
     def getUserById(id, email):
         new_data = User.query.filter_by(id=id).filter_by(email=email).first()
@@ -162,13 +168,13 @@ class User(db.Model):
             pass
         return new_user
 
-    def update_user(_key, _value, _user_data):
-        if _key == 'password':
-            password = hashlib.sha256((_value).encode()).hexdigest()
-            # print(_key, _value, _user_data)
-            _user_data.password = password
-            # print(password)
+    def update_user( _id, _value, _user_data):
+        _user_data = User.query.filter_by(id=_id).first()
+        _user_data.password = hashlib.sha256((_value).encode()).hexdigest()
         db.session.commit()
+        return True
+        
+        
 
     def delete_user(_id):
         is_successful = User.query.filter_by(id=_id).delete()
@@ -540,6 +546,12 @@ class Code(db.Model):
         is_successful = Code.query.filter_by(id=_id).delete()
         db.session.commit()
         return bool(is_successful)
+
+    def getCodeByOTP(otp):
+        if Code.query.filter_by(code=otp):
+            return Code.query.filter_by(code=otp).first()
+        else:
+            return None
 
     # get transacttion by ID
     def getCodeById(id, page=1, per_page=10):        

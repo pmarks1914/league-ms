@@ -66,10 +66,9 @@ def callbackMfs():
 @app.route('/login', methods=['POST'])
 def get_token():
     request_data = request.get_json()
-    username = request_data.get('username')
-    password = hashlib.sha256(request_data.get('password').encode()).hexdigest()
-    match = User.username_password_match(username, password)
-    if match:
+    password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
+    match = User.username_password_match(request_data.get('email'), password_hashed)
+    if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
         token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
         return { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token  }
@@ -115,7 +114,7 @@ def add_user_registration():
     msg = {}
     # print("fff")
     try:
-        _password = hashlib.sha256((request_data.get('password')).encode()).hexdigest()  
+        _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()  
         _first_name = request_data.get('first_name')
         _last_name = request_data.get('last_name')
         _other_name = request_data.get('other_name')
@@ -164,12 +163,73 @@ def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserById(id, request_data.get('email'))
-
+    print(Code.getCodeByOTP(request_data.get('code')))
     validate_list = ["id", "password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
     if resource is None:
         return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
+    elif Code.getCodeByOTP(request_data.get('code')) is None:
+        return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
+    # Get the data from the request
+    data = request.get_json()
+    get_req_keys = None
+    get_req_keys_value_pair = None
+    # Update only the provided fields
+    for key, value in data.items():
+        if key in validate_list:
+            validate_status = True
+            if get_req_keys is None:
+                get_req_keys = key
+                get_req_keys_value_pair = f'"{key}": "{value}"'
+            else:
+                get_req_keys = f"{get_req_keys}, {key}"
+                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
+  
+    # print(json.dumps(get_req_keys_value_pair))
+    if validate_status is False:
+        msg = {
+            "code": 201,
+            "msg": str(validate_list)
+        }
+    else:
+        try:
+            if User.update_user( id, request_data.get('password1'), resource):
+                msg = {
+                        "code": 200,
+                        "msg": f"user detail(s) updated: {get_req_keys}",
+                        # "data": 'f{instance_dict}'
+                }
+            else:
+                msg = {
+                    "code": 301,
+                    "msg": f"user detail(s) failed to updated",
+                    # "data": 'f{instance_dict}'
+            }
+        except Exception as e:
+            msg = {
+                    "code": 501,
+                    "error :" : str(e),
+                    "msg": "server error" 
+                }
+    # print("resource", resource)
+
+    response = Response( json.dumps(msg), status=200, mimetype='application/json')
+    return response  
+    
+
+def update_user(id):
+    # Fetch the resource from your data source (e.g., database)
+    request_data = request.get_json()
+    resource = User.getUserById(id, request_data.get('email'))
+    print(Code.getCodeByOTP(request_data.get('code')))
+    validate_list = ["id", "password1", "password2", "code", "email"]
+    validate_status = False
+    msg = {}
+    if resource is None:
+        return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
+    elif Code.getCodeByOTP(request_data.get('code')) is None:
+        return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
     # Get the data from the request
     data = request.get_json()
     get_req_keys = None
@@ -185,12 +245,18 @@ def update_password(id):
                 get_req_keys = f"{get_req_keys}, {key}"
                 get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
             try:
-                User.update_user(key, value, resource)
-                msg = {
-                        "code": 200,
-                        "msg": f"user detail(s) updated: {get_req_keys}",
-                        # "data": 'f{instance_dict}'
-                }
+                if User.update_user(key, value, resource):
+                    msg = {
+                            "code": 200,
+                            "msg": f"user detail(s) updated: {get_req_keys}",
+                            # "data": 'f{instance_dict}'
+                    }
+                else:
+                    msg = {
+                            "code": 301,
+                            "msg": f"user detail(s) failed to updated",
+                            # "data": 'f{instance_dict}'
+                    }
             except Exception as e:
                 msg = {
                     "code": 501,
@@ -208,7 +274,6 @@ def update_password(id):
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
     
-
 @app.route('/v1/otp/email', methods=['POST'])
 def send_notification():
     data = request.get_json()
