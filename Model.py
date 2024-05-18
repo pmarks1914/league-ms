@@ -22,12 +22,14 @@ import json
 from sqlalchemy import ForeignKey
 import uuid
 from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.inspection import inspect
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
+
 
 def alchemy_to_json(obj, visited=None):
     if visited is None:
@@ -153,7 +155,7 @@ class User(db.Model):
                 db.session.add(new_user)
                 db.session.commit()
         except Exception as e:
-            # db.session.rollback()  # Rollback the transaction in case of an error
+            db.session.rollback()  # Rollback the transaction in case of an error
             print(f"Error:: {e}")
         finally:
             # db.session.close()

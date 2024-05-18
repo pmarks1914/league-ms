@@ -66,8 +66,8 @@ def callbackMfs():
 @app.route('/login', methods=['POST'])
 def get_token():
     request_data = request.get_json()
-    username = request_data['username']
-    password = hashlib.sha256(request_data['password'].encode()).hexdigest()
+    username = request_data.get('username')
+    password = hashlib.sha256(request_data.get('password').encode()).hexdigest()
     match = User.username_password_match(username, password)
     if match:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
@@ -111,21 +111,22 @@ def user(id):
 @app.route('/v1/registration/', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
+    _first_name = request_data.get('first_name')
     msg = {}
     # print("fff")
     try:
-        _password = hashlib.sha256((request_data['password']).encode()).hexdigest()  
-        _first_name = request_data['first_name']
-        _last_name = request_data['last_name']
-        _other_name = request_data['other_name']
-        _email = request_data['email']
-        # _phone = request_data['phone']
-        _description = request_data['description']
-        _role = request_data['role']
-        _address = request_data['address']
+        _password = hashlib.sha256((request_data.get('password')).encode()).hexdigest()  
+        _first_name = request_data.get('first_name')
+        _last_name = request_data.get('last_name')
+        _other_name = request_data.get('other_name')
+        _email = request_data.get('email')
+        # _phone = request_data.get('phone')
+        _description = request_data.get('description')
+        _role = request_data.get('role')
+        _address = request_data.get('address')
 
-        print(User.query.filter_by(email=request_data['email']).first())
-        if User.query.filter_by(email=request_data['email']).first() is not None:
+        print(User.query.filter_by(email=request_data.get('email')).first())
+        if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
                 "error": "user already registtered",
@@ -134,11 +135,19 @@ def add_user_registration():
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response
         else:
-            user = User.createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address)
-            print(user)
+            User.createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address)
+            # print(json.dumps(user))
             invalidUserOjectErrorMsg = {
                 "code": 200,
-                # "error": str(e),
+                "data": {
+                    "first_name": request_data.get('first_name'),
+                    "last_name": request_data.get('last_name'),
+                    "other_name": request_data.get('other_name'),
+                    "email": request_data.get('email'),
+                    "description": request_data.get('description'),
+                    "role": request_data.get('role'),
+                    "address": request_data.get('address')
+                }
             }
             response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
             return response
