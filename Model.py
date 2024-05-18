@@ -112,8 +112,8 @@ class User(db.Model):
                 'created_on': self.created_on,
                 'updated_on': self.updated_on })
 
-    def getUserById(id):
-        new_data = User.query.filter_by(id=id).first()
+    def getUserById(id, email):
+        new_data = User.query.filter_by(id=id).filter_by(email=email).first()
         new_data_object = alchemy_to_json(new_data)
         return new_data_object
 

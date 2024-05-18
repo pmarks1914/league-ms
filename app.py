@@ -159,6 +159,56 @@ def add_user_registration():
         response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
         return response
   
+@app.route('/v1/password/<string:id>', methods=['PATCH'])
+def update_password(id):
+    # Fetch the resource from your data source (e.g., database)
+    request_data = request.get_json()
+    resource = User.getUserById(id, request_data.get('email'))
+
+    validate_list = ["id", "password1", "password2", "code", "email"]
+    validate_status = False
+    msg = {}
+    if resource is None:
+        return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
+    # Get the data from the request
+    data = request.get_json()
+    get_req_keys = None
+    get_req_keys_value_pair = None
+    # Update only the provided fields
+    for key, value in data.items():
+        if key in validate_list:
+            validate_status = True
+            if get_req_keys is None:
+                get_req_keys = key
+                get_req_keys_value_pair = f'"{key}": "{value}"'
+            else:
+                get_req_keys = f"{get_req_keys}, {key}"
+                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
+            try:
+                User.update_user(key, value, resource)
+                msg = {
+                        "code": 200,
+                        "msg": f"user detail(s) updated: {get_req_keys}",
+                        # "data": 'f{instance_dict}'
+                }
+            except Exception as e:
+                msg = {
+                    "code": 501,
+                    "error :" : str(e),
+                    "msg": "server error" 
+                }
+    # print(json.dumps(get_req_keys_value_pair))
+    if validate_status is False:
+        msg = {
+            "code": 201,
+            "msg": str(validate_list)
+        }
+    # print("resource", resource)
+
+    response = Response( json.dumps(msg), status=200, mimetype='application/json')
+    return response  
+    
+
 @app.route('/v1/otp/email', methods=['POST'])
 def send_notification():
     data = request.get_json()
