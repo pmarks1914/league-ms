@@ -223,7 +223,7 @@ def send_notification():
             render_html = render_template('email.html', code=code)
             Code.createCode(to_email, code, "OTP")
             if send_notification_email(to_email, subject, render_html):
-                return 'Notification sent successfully!'
+                return jsonify({ 'code': 200, 'msg': 'Notification sent successfully'}), 200
             else:
                 return 'Failed to send notification.'
         else:

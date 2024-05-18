@@ -516,7 +516,7 @@ class Code(db.Model):
 
     def createCode(_email, _code, _type):
         # cron job to delete expired used user sessions
-        cutoff_time = datetime.utcnow() - timedelta(seconds=5)
+        cutoff_time = datetime.utcnow() - timedelta(minutes=5)
         Code.query.filter(Code.updated_on <= cutoff_time).delete()
         db.session.commit()
 
