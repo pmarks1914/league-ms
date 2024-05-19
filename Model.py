@@ -234,7 +234,7 @@ class School(db.Model):
             logger.error(f"Error retrieving all schools: {e}")
             raise
 
-    def update_school(school_id: str, **kwargs):
+    def update_school(school_id, **kwargs):
         try:
             school = db.session.query(School).filter(School.id == school_id).one_or_none()
             if school:
@@ -251,7 +251,7 @@ class School(db.Model):
             logger.error(f"Error updating school: {e}")
             raise
 
-    def delete_school(school_id: str):
+    def delete_school(school_id):
         try:
             school = db.session.query(School).filter(School.id == school_id).one_or_none()
             if school:
@@ -282,7 +282,7 @@ class Student(db.Model):
     user = db.relationship('User', back_populates='student')
     application = db.relationship('Application', back_populates='student')
 
-    def create_student(user_id: str, application_id: str, description: str = None, **kwargs):
+    def create_student(user_id, application_id, description, **kwargs):
         _id = str(uuid.uuid4())
         try:
             student = Student(id=_id, user_id=user_id, application_id=application_id, description=description, **kwargs)
@@ -316,7 +316,7 @@ class Student(db.Model):
             logger.error(f"Error retrieving all students: {e}")
             raise
 
-    def update_student(student_id: str, **kwargs):
+    def update_student(student_id, **kwargs):
         try:
             student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
             if student:
@@ -333,7 +333,7 @@ class Student(db.Model):
             logger.error(f"Error updating student: {e}")
             raise
 
-    def delete_student(student_id: str):
+    def delete_student(student_id):
         try:
             student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
             if student:
@@ -361,7 +361,7 @@ class Application(db.Model):
     student = db.relationship('Student', back_populates='application')
     programme = db.relationship('Programme', back_populates='application')
 
-    def create_application(description: str = None, **kwargs):
+    def create_application(description, **kwargs):
         _id = str(uuid.uuid4())
         try:
             application = Application(id=_id, description=description, **kwargs)
@@ -374,7 +374,7 @@ class Application(db.Model):
             logger.error(f"Error creating application: {e}")
             raise
 
-    def get_application_by_id(application_id: str):
+    def get_application_by_id(application_id):
         try:
             application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
             if application:
@@ -395,7 +395,7 @@ class Application(db.Model):
             logger.error(f"Error retrieving all applications: {e}")
             raise
 
-    def update_application(application_id: str, **kwargs):
+    def update_application(application_id, **kwargs):
         try:
             application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
             if application:
@@ -412,7 +412,7 @@ class Application(db.Model):
             logger.error(f"Error updating application: {e}")
             raise
 
-    def delete_application(application_id: str):
+    def delete_application(application_id):
         try:
             application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
             if application:
@@ -446,7 +446,7 @@ class Programme(db.Model):
     # Define a relationship to access the application object from a User object
     application = db.relationship('Application', back_populates='programme')
 
-    def create_programme(school_id: str, application_id: str, name: str = None, description: str = None, **kwargs):
+    def create_programme(school_id, application_id, name, description, **kwargs):
         _id = str(uuid.uuid4())
         try:
             programme = Programme(school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
@@ -459,7 +459,7 @@ class Programme(db.Model):
             logger.error(f"Error creating programme: {e}")
             raise
 
-    def get_programme_by_id(programme_id: str):
+    def get_programme_by_id(programme_id):
         try:
             programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
             if programme:
@@ -480,7 +480,7 @@ class Programme(db.Model):
             logger.error(f"Error retrieving all programmes: {e}")
             raise
 
-    def update_programme(programme_id: str, **kwargs):
+    def update_programme(programme_id, **kwargs):
         try:
             programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
             if programme:
@@ -497,7 +497,7 @@ class Programme(db.Model):
             logger.error(f"Error updating programme: {e}")
             raise
 
-    def delete_programme(programme_id: str):
+    def delete_programme(programme_id):
         try:
             programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
             if programme:
