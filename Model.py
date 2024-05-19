@@ -31,7 +31,7 @@ list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
 
 
-def alchemy_to_json(obj, visited=None):
+def alchemy_to_json(obj, role, visited=None):
     if visited is None:
         visited = set()
     if obj in visited:
@@ -39,7 +39,11 @@ def alchemy_to_json(obj, visited=None):
     visited.add(obj)
     if isinstance(obj.__class__, DeclarativeMeta):
         fields = {}
-        exclude_fields = ["query", "registry", "query_class", "password", "apikey", "business"]
+        if role == 'STUDENT':
+            exclude_fields = ["query", "registry", "query_class", "password", "apikey", "student"]
+        else:
+            exclude_fields = ["query", "registry", "query_class", "password", "apikey", "business"]
+
         for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata' and x not in exclude_fields]:
             data = obj.__getattribute__(field)
             try:
@@ -112,15 +116,16 @@ class User(db.Model):
                 'created_on': self.created_on,
                 'updated_on': self.updated_on })
     def username_password_match(_username, _password ):
-        user_get = User.query.filter_by(email=_username, password=_password).first()
-        if user_get is None:
+        new_data = User.query.filter_by(email=_username, password=_password).first()
+        if new_data is None:
             return False
-        else:
-            return user_get
+        elif new_data.role == 'STUDENT':
+            new_data_object = alchemy_to_json(new_data, 'STUDENT')
+            return new_data_object
 
-    def getUserById(id, email):
-        new_data = User.query.filter_by(id=id).filter_by(email=email).first()
-        new_data_object = alchemy_to_json(new_data)
+    def getUserById(id):
+        new_data = User.query.filter_by(id=id).first()
+        new_data_object = alchemy_to_json(new_data, 'STUDENT')
         return new_data_object
 
     def getAllUsers(_email):
@@ -136,12 +141,9 @@ class User(db.Model):
                     'id': user.id,
                     'email': user.email,
                     'role': user.role,
-                    'phone': user.phone, 
                     'first_name': user.first_name, 
                     'last_name': user.last_name, 
                     'other_name': user.other_name, 
-                    'logo': user.logo, 
-                    'account_type': user.account_type, 
                     'created_by': user.created_by,
                     'updated_by': user.updated_by,
                     'created_on': user.created_on.strftime("%Y-%m-%d %H:%M:%S"),
@@ -198,7 +200,7 @@ class School(db.Model):
     file = db.relationship('Fileupload', back_populates='school')
 
 
-    def create_school(user_id: str, name: str = None, description: str = None, **kwargs):
+    def create_school(user_id, name, description, **kwargs):
         _id = str(uuid.uuid4())
         try:
             school = School(id=_id, user_id=user_id, name=name, description=description, **kwargs)

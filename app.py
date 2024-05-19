@@ -10,6 +10,7 @@ from Notification.Email.sendEmail import send_notification_email
 # from sendEmail import Email 
 from Settings import *
 import jwt, datetime
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from functools import wraps
 from flask_cors import CORS
 import hashlib
@@ -71,24 +72,32 @@ def get_token():
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
         token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
-        return { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token  }
+        msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+        response = Response( json.dumps(msg), status=200, mimetype='application/json')
+        return response 
     else:
         return Response('', 401, mimetype='application/json')
     
 def token_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        #token = request.args.get('token')
-        #print(request.headers['Token'])
-        #print(token)
+        token = request.headers.get('Authorization')
+        token = token.split(" ")[1]        
+        if not token:
+            return jsonify({'error': 'Token is missing', 'status': 401}), 401
         try:
-            jwt.decode( request.headers['Token'], app.config['SECRET_KEY'], algorithms=['HS256'] )
+            jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             return f(*args, **kwargs)
-        except:
-            return jsonify({'error': 'Invalid Token', "status": 301 })
+        except ExpiredSignatureError :
+            return jsonify({'error': 'Token has expired', 'status': 401}), 401
+        except InvalidTokenError:
+            return jsonify({'error': 'Invalid Token', 'status': 401}), 401
+        except Exception as e:
+            return jsonify({'error': str(e), 'status': 401}), 401
     return wrapper
 
 @app.route('/user/<string:id>', methods=['GET'])
+@token_required
 def user(id):
     if request.method == 'GET':
         try:
@@ -216,64 +225,7 @@ def update_password(id):
 
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
-    
-
-def update_user(id):
-    # Fetch the resource from your data source (e.g., database)
-    request_data = request.get_json()
-    resource = User.getUserById(id, request_data.get('email'))
-    print(Code.getCodeByOTP(request_data.get('code')))
-    validate_list = ["id", "password1", "password2", "code", "email"]
-    validate_status = False
-    msg = {}
-    if resource is None:
-        return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
-    elif Code.getCodeByOTP(request_data.get('code')) is None:
-        return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
-    # Get the data from the request
-    data = request.get_json()
-    get_req_keys = None
-    get_req_keys_value_pair = None
-    # Update only the provided fields
-    for key, value in data.items():
-        if key in validate_list:
-            validate_status = True
-            if get_req_keys is None:
-                get_req_keys = key
-                get_req_keys_value_pair = f'"{key}": "{value}"'
-            else:
-                get_req_keys = f"{get_req_keys}, {key}"
-                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
-            try:
-                if User.update_user(key, value, resource):
-                    msg = {
-                            "code": 200,
-                            "msg": f"user detail(s) updated: {get_req_keys}",
-                            # "data": 'f{instance_dict}'
-                    }
-                else:
-                    msg = {
-                            "code": 301,
-                            "msg": f"user detail(s) failed to updated",
-                            # "data": 'f{instance_dict}'
-                    }
-            except Exception as e:
-                msg = {
-                    "code": 501,
-                    "error :" : str(e),
-                    "msg": "server error" 
-                }
-    # print(json.dumps(get_req_keys_value_pair))
-    if validate_status is False:
-        msg = {
-            "code": 201,
-            "msg": str(validate_list)
-        }
-    # print("resource", resource)
-
-    response = Response( json.dumps(msg), status=200, mimetype='application/json')
-    return response  
-    
+      
 @app.route('/v1/otp/email', methods=['POST'])
 def send_notification():
     data = request.get_json()
