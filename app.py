@@ -280,7 +280,6 @@ def student(id):
     if request.method == 'GET':
         try:
             request_data = Student.get_student_by_id(id)
-            # print("mfs callback >>> ", request_data )
             msg = {
                 "code": 200,
                 "message": 'Successful',

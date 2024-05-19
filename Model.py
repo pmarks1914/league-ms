@@ -295,7 +295,7 @@ class Student(db.Model):
             logger.error(f"Error creating student: {e}")
             raise
 
-    def get_student_by_id(student_id: str):
+    def get_student_by_id(student_id):
         try:
             student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
             if student:
