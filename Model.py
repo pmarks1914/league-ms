@@ -213,7 +213,7 @@ class School(db.Model):
             logger.error(f"Error creating school: {e}")
             raise
 
-    def get_school_by_id(school_id: str):
+    def get_school_by_id(school_id):
         try:
             school = db.session.query(School).filter(School.id == school_id).one_or_none()
             if school:
