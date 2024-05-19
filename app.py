@@ -5,7 +5,7 @@ import requests, json
 from Helper.helper import generate_random_code
 from fileManager.fileManager import fileUpload
 #import geocoder
-from Model import User, Code, db, Fileupload
+from Model import School, User, Code, db, Fileupload
 from Notification.Email.sendEmail import send_notification_email
 # from sendEmail import Email 
 from Settings import *
@@ -252,6 +252,29 @@ def send_notification():
 def index():
     return render_template('/fileUpload.html')
 
+
+
+
+@app.route('/school/<string:id>', methods=['GET'])
+@token_required
+def school(id):
+    if request.method == 'GET':
+        try:
+            request_data = School.get_school_by_id(id)
+            # print("mfs callback >>> ", request_data )
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
 @app.route('/upload', methods=['POST'])
 def upload():
     return fileUpload(request)
