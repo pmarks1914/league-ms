@@ -215,7 +215,7 @@ class School(db.Model):
 
     def get_school_by_id(school_id):
         try:
-            school = db.session.query(School).filter(School.id == school_id).one_or_none()
+            school = db.session.query(School).filter(School.id == school_id).one_or_none() or []
             if school:
                 logger.info(f"School retrieved with ID: {school_id}")
             else:
@@ -236,7 +236,7 @@ class School(db.Model):
 
     def update_school(school_id, **kwargs):
         try:
-            school = db.session.query(School).filter(School.id == school_id).one_or_none()
+            school = db.session.query(School).filter(School.id == school_id).one_or_none() or []
             if school:
                 for key, value in kwargs.items():
                     setattr(school, key, value)
@@ -253,7 +253,7 @@ class School(db.Model):
 
     def delete_school(school_id):
         try:
-            school = db.session.query(School).filter(School.id == school_id).one_or_none()
+            school = db.session.query(School).filter(School.id == school_id).one_or_none() or []
             if school:
                 db.session.delete(school)
                 db.session.commit()
@@ -297,7 +297,7 @@ class Student(db.Model):
 
     def get_student_by_id(student_id):
         try:
-            student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
+            student = db.session.query(Student).filter(Student.id == student_id).one_or_none() or []
             if student:
                 logger.info(f"Student retrieved with ID: {student_id}")
             else:
@@ -318,7 +318,7 @@ class Student(db.Model):
 
     def update_student(student_id, **kwargs):
         try:
-            student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
+            student = db.session.query(Student).filter(Student.id == student_id).one_or_none() or []
             if student:
                 for key, value in kwargs.items():
                     setattr(student, key, value)
@@ -335,7 +335,7 @@ class Student(db.Model):
 
     def delete_student(student_id):
         try:
-            student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
+            student = db.session.query(Student).filter(Student.id == student_id).one_or_none() or []
             if student:
                 db.session.delete(student)
                 db.session.commit()
@@ -376,7 +376,7 @@ class Application(db.Model):
 
     def get_application_by_id(application_id):
         try:
-            application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
+            application = db.session.query(Application).filter(Application.id == application_id).one_or_none() or []
             if application:
                 logger.info(f"Application retrieved with ID: {application_id}")
             else:
@@ -397,7 +397,7 @@ class Application(db.Model):
 
     def update_application(application_id, **kwargs):
         try:
-            application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
+            application = db.session.query(Application).filter(Application.id == application_id).one_or_none() or []
             if application:
                 for key, value in kwargs.items():
                     setattr(application, key, value)
@@ -414,7 +414,7 @@ class Application(db.Model):
 
     def delete_application(application_id):
         try:
-            application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
+            application = db.session.query(Application).filter(Application.id == application_id).one_or_none() or []
             if application:
                 db.session.delete(application)
                 db.session.commit()
@@ -461,7 +461,7 @@ class Programme(db.Model):
 
     def get_programme_by_id(programme_id):
         try:
-            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none() or []
             if programme:
                 logger.info(f"Programme retrieved with ID: {programme_id}")
             else:
@@ -482,7 +482,7 @@ class Programme(db.Model):
 
     def update_programme(programme_id, **kwargs):
         try:
-            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none() or []
             if programme:
                 for key, value in kwargs.items():
                     setattr(programme, key, value)
@@ -499,7 +499,7 @@ class Programme(db.Model):
 
     def delete_programme(programme_id):
         try:
-            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
+            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none() or []
             if programme:
                 db.session.delete(programme)
                 db.session.commit()

@@ -84,16 +84,16 @@ def token_required(f):
         token = request.headers.get('Authorization')
         token = token.split(" ")[1]        
         if not token:
-            return jsonify({'error': 'Token is missing', 'status': 401}), 401
+            return jsonify({'error': 'Token is missing', 'code': 401}), 401
         try:
             jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             return f(*args, **kwargs)
         except ExpiredSignatureError :
-            return jsonify({'error': 'Token has expired', 'status': 401}), 401
+            return jsonify({'error': 'Token has expired', 'code': 401}), 401
         except InvalidTokenError:
-            return jsonify({'error': 'Invalid Token', 'status': 401}), 401
+            return jsonify({'error': 'Invalid Token', 'code': 401}), 401
         except Exception as e:
-            return jsonify({'error': str(e), 'status': 401}), 401
+            return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
 
 @app.route('/user/<string:id>', methods=['GET'])
@@ -312,27 +312,6 @@ def application(id):
     else:
         return {"code": 400, "message": 'Failed' }
 
- 
-@app.route('/application/<string:id>', methods=['GET'])
-@token_required
-def application(id):
-    if request.method == 'GET':
-        try:
-            request_data = Application.get_application_by_id(id)
-            msg = {
-                "code": 200,
-                "message": 'Successful',
-                "data": request_data
-            }
-            response = Response( json.dumps(msg), status=200, mimetype='application/json')
-            return response 
-        except Exception as e:
-            # print(e)
-            return {"code": 203, "message": 'Failed', "error": str(e)}
-    else:
-        return {"code": 400, "message": 'Failed' }
- 
- 
 @app.route('/programme/<string:id>', methods=['GET'])
 @token_required
 def programme(id):
