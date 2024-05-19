@@ -5,7 +5,7 @@ import requests, json
 from Helper.helper import generate_random_code
 from fileManager.fileManager import fileUpload
 #import geocoder
-from Model import School, Student, User, Code, db, Fileupload
+from Model import Application, School, Student, User, Code, db, Fileupload
 from Notification.Email.sendEmail import send_notification_email
 # from sendEmail import Email 
 from Settings import *
@@ -280,6 +280,45 @@ def student(id):
     if request.method == 'GET':
         try:
             request_data = Student.get_student_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
+@app.route('/application/<string:id>', methods=['GET'])
+@token_required
+def application(id):
+    if request.method == 'GET':
+        try:
+            request_data = Application.get_application_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+
+ 
+@app.route('/application/<string:id>', methods=['GET'])
+@token_required
+def application(id):
+    if request.method == 'GET':
+        try:
+            request_data = Application.get_application_by_id(id)
             msg = {
                 "code": 200,
                 "message": 'Successful',
