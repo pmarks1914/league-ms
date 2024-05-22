@@ -253,7 +253,7 @@ class School(db.Model):
 
     def delete_school(school_id):
         try:
-            school = db.session.query(School).filter(School.id == school_id).one_or_none() or []
+            school = db.session.query(School).filter(School.id == school_id).one_or_none()
             if school:
                 db.session.delete(school)
                 db.session.commit()
@@ -281,6 +281,15 @@ class Student(db.Model):
     # Define a relationship to access the User object from a User object
     user = db.relationship('User', back_populates='student')
     application = db.relationship('Application', back_populates='student')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'description': self.description,
+            'created_on': self.created_on,
+            'updated_on': self.updated_on
+        }
 
     def create_student(user_id, application_id, description, **kwargs):
         _id = str(uuid.uuid4())
@@ -327,7 +336,7 @@ class Student(db.Model):
                 logger.info(f"Student updated with ID: {student.id}")
             else:
                 logger.warning(f"No student found with ID: {student_id}")
-            return student
+            return student.to_dict()
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error updating student: {e}")
@@ -335,7 +344,7 @@ class Student(db.Model):
 
     def delete_student(student_id):
         try:
-            student = db.session.query(Student).filter(Student.id == student_id).one_or_none() or []
+            student = db.session.query(Student).filter(Student.id == student_id).one_or_none()
             if student:
                 db.session.delete(student)
                 db.session.commit()
@@ -414,7 +423,7 @@ class Application(db.Model):
 
     def delete_application(application_id):
         try:
-            application = db.session.query(Application).filter(Application.id == application_id).one_or_none() or []
+            application = db.session.query(Application).filter(Application.id == application_id).one_or_none()
             if application:
                 db.session.delete(application)
                 db.session.commit()
@@ -499,7 +508,7 @@ class Programme(db.Model):
 
     def delete_programme(programme_id):
         try:
-            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none() or []
+            programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none()
             if programme:
                 db.session.delete(programme)
                 db.session.commit()

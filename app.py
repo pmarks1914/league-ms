@@ -119,11 +119,17 @@ def user(id):
 @app.route('/v1/registration/', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
-    _first_name = request_data.get('first_name')
     msg = {}
     # print("fff")
+    if request_data.get('password1') == None or request_data.get('email') == None:
+        msg = {
+            "code": 305,
+            "message": 'Password or Email is required'
+        }
+        response = Response(json.dumps(msg), status=200, mimetype='application/json')
+        return response
     try:
-        _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()  
+        _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()
         _first_name = request_data.get('first_name')
         _last_name = request_data.get('last_name')
         _other_name = request_data.get('other_name')
@@ -254,13 +260,12 @@ def index():
 
 
 
-@app.route('/school/<string:id>', methods=['GET'])
+@app.route('/school/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def school(id):
     if request.method == 'GET':
         try:
             request_data = School.get_school_by_id(id)
-            # print("mfs callback >>> ", request_data )
             msg = {
                 "code": 200,
                 "message": 'Successful',
@@ -269,12 +274,45 @@ def school(id):
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         except Exception as e:
-            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if School.delete_school(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
             return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
  
-@app.route('/student/<string:id>', methods=['GET'])
+@app.route('/student', methods=['POST'])
+def add_student():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    description = data.get('description')
+    application_id = data.get('application_id')
+    additional_data = {k: v for k, v in data.items() if k not in ['user_id', 'description']}
+    msg = {}
+    try:
+        student = Student.create_student(user_id, application_id or None, description, **additional_data)
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "data": json.dumps(student)
+        }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+@app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def student(id):
     if request.method == 'GET':
@@ -290,10 +328,25 @@ def student(id):
         except Exception as e:
             # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Student.delete_student(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
  
-@app.route('/application/<string:id>', methods=['GET'])
+@app.route('/application/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def application(id):
     if request.method == 'GET':
@@ -309,10 +362,25 @@ def application(id):
         except Exception as e:
             # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Application.delete_application(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
 
-@app.route('/programme/<string:id>', methods=['GET'])
+@app.route('/programme/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def programme(id):
     if request.method == 'GET':
@@ -327,6 +395,17 @@ def programme(id):
             return response 
         except Exception as e:
             # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            request_data = Programme.delete_programme(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful'
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
             return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
