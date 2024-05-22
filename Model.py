@@ -277,7 +277,6 @@ class Student(db.Model):
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the User table
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
-    application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
     # Define a relationship to access the User object from a User object
     user = db.relationship('User', back_populates='student')
     application = db.relationship('Application', back_populates='student')
@@ -294,7 +293,7 @@ class Student(db.Model):
     def create_student(user_id, application_id, description, **kwargs):
         _id = str(uuid.uuid4())
         try:
-            student = Student(id=_id, user_id=user_id, application_id=application_id, description=description, **kwargs)
+            student = Student(id=_id, user_id=user_id, application_id=application_id, description=description, **kwargs) 
             db.session.add(student)
             db.session.commit()
             logger.info(f"Student created with ID: {student.id}")
@@ -367,7 +366,7 @@ class Application(db.Model):
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    student = db.relationship('Student', back_populates='application')
+    student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
     programme = db.relationship('Programme', back_populates='application')
 
     def create_application(description, **kwargs):

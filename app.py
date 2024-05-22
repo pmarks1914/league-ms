@@ -71,7 +71,7 @@ def get_token():
     match = User.username_password_match(request_data.get('email'), password_hashed)
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
+        token = jwt.encode({'exp': expiration_date, 'id': match['id'] }, app.config['SECRET_KEY'], algorithm='HS256')
         msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
@@ -293,24 +293,6 @@ def school(id):
     else:
         return {"code": 400, "message": 'Failed' }
  
-@app.route('/student', methods=['POST'])
-def add_student():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    description = data.get('description')
-    application_id = data.get('application_id')
-    additional_data = {k: v for k, v in data.items() if k not in ['user_id', 'description']}
-    msg = {}
-    try:
-        student = Student.create_student(user_id, application_id or None, description, **additional_data)
-        msg = {
-            "code": 200,
-            "message": 'Successful',
-            "data": json.dumps(student)
-        }
-        return Response( json.dumps(msg), status=200, mimetype='application/json')
-    except Exception as e:
-        return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 @app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
@@ -346,6 +328,25 @@ def student(id):
     else:
         return {"code": 400, "message": 'Failed' }
  
+@app.route('/student', methods=['POST'])
+def add_student():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    description = data.get('description')
+    application_id = data.get('application_id')
+    additional_data = {k: v for k, v in data.items() if k not in ['user_id', 'description']}
+    msg = {}
+    try:
+        student = Student.create_student(user_id, application_id or None, description, **additional_data)
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "data": json.dumps(student)
+        }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
 @app.route('/application/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def application(id):
