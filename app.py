@@ -337,9 +337,11 @@ def add_student():
         token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
         data = request.get_json()
         user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
         description = data.get('description')
         additional_data = {k: v for k, v in data.items() if k not in ['description']}
-        student = Student.create_student(user_id, description, **additional_data)
+        student = Student.create_student(user_id, description, user_email, **additional_data)
         # print(student)
         msg = {
             "code": 200,

@@ -301,10 +301,10 @@ class Student(db.Model):
             'updated_on': self.updated_on
         }
 
-    def create_student(user_id, description, **kwargs):
+    def create_student(user_id, description, user_email, **kwargs):
         _id = str(uuid.uuid4())
         try:
-            student = Student(id=_id, user_id=user_id, description=description, **kwargs) 
+            student = Student(id=_id, user_id=user_id, description=description, updated_by=user_email, created_by=user_email) 
             db.session.add(student)
             db.session.commit()
             logger.info(f"Student created with ID: {student.id}")
