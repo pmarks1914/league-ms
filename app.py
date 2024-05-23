@@ -330,6 +330,9 @@ def student(id):
  
 @app.route('/student', methods=['POST'])
 def add_student():
+    token = request.headers.get('Authorization')
+    token = token.split(" ")[1]        
+    jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
     data = request.get_json()
     user_id = data.get('user_id')
     description = data.get('description')
