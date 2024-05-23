@@ -340,14 +340,27 @@ def add_student():
         description = data.get('description')
         additional_data = {k: v for k, v in data.items() if k not in ['description']}
         student = Student.create_student(user_id, description, **additional_data)
-        print(student)
+        # print(student)
         msg = {
             "code": 200,
             "message": 'Successful',
-            # "data": json.dumps(student)
+            "data": {
+                'id': student.id,
+                'description': student.description,
+                'user_id': student.user_id,
+                'created_by': student.created_by,
+                'updated_by': student.updated_by,
+                'created_on': str(student.created_on),
+                'updated_on': str(student.updated_on)
+            }
         }
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 @app.route('/application/<string:id>', methods=['GET', 'DELETE'])

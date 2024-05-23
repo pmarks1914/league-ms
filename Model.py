@@ -281,6 +281,17 @@ class Student(db.Model):
     user = db.relationship('User', back_populates='student')
     application = db.relationship('Application', back_populates='student')
 
+    # def _repr_(self):
+    #     return {
+    #             'id': self.id,
+    #             'description': self.description,
+    #             'user_id': self.user_id,
+    #             'created_by': self.created_by,
+    #             'updated_by': self.updated_by,
+    #             'created_on': self.created_on,
+    #             'updated_on': self.updated_on }
+        
+    
     def to_dict(self):
         return {
             'id': self.id,
