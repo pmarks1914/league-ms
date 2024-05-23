@@ -331,20 +331,20 @@ def student(id):
 @app.route('/student', methods=['POST'])
 def add_student():
     token = request.headers.get('Authorization')
-    token = token.split(" ")[1]        
-    jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-    data = request.get_json()
-    user_id = data.get('user_id')
-    description = data.get('description')
-    application_id = data.get('application_id')
-    additional_data = {k: v for k, v in data.items() if k not in ['user_id', 'description']}
     msg = {}
     try:
-        student = Student.create_student(user_id, application_id or None, description, **additional_data)
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        description = data.get('description')
+        additional_data = {k: v for k, v in data.items() if k not in ['description']}
+        student = Student.create_student(user_id, description, **additional_data)
+        print(student)
         msg = {
             "code": 200,
             "message": 'Successful',
-            "data": json.dumps(student)
+            # "data": json.dumps(student)
         }
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     except Exception as e:
