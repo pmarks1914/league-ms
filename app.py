@@ -71,7 +71,7 @@ def get_token():
     match = User.username_password_match(request_data.get('email'), password_hashed)
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        token = jwt.encode({'exp': expiration_date, 'id': match['id'] }, app.config['SECRET_KEY'], algorithm='HS256')
+        token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
         msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 

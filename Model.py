@@ -368,6 +368,7 @@ class Application(db.Model):
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
     programme = db.relationship('Programme', back_populates='application')
+    student = db.relationship('Student', back_populates='application')
 
     def create_application(description, **kwargs):
         _id = str(uuid.uuid4())
