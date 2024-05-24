@@ -188,6 +188,7 @@ class School(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
     name = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
+    expected_applicantion = db.Column(db.Integer, nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
