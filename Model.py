@@ -201,10 +201,10 @@ class School(db.Model):
     file = db.relationship('Fileupload', back_populates='school')
 
 
-    def create_school(user_id, name, description, **kwargs):
+    def create_school(user_id, name, **kwargs):
         _id = str(uuid.uuid4())
         try:
-            school = School(id=_id, user_id=user_id, name=name, description=description, **kwargs)
+            school = School(id=_id, user_id=user_id, name=name, **kwargs)
             db.session.add(school)
             db.session.commit()
             logger.info(f"School created with ID: {school.id}")
