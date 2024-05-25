@@ -303,20 +303,20 @@ def add_school():
         data = request.get_json()
         user_id = token_data['id'] or None
         user_data = User.getUserById(user_id)
+        print("user_data ", user_data['file'] )
         user_email = user_data['email'] or None
         description = data.get('description')
         expected_applicantion = data.get('expected_applicantion')
         name = data.get('name')
-
-        additional_data = {k: v for k, v in data.items() if k not in ['description']}
-        post_data = School.create_school(user_id, name, description, expected_applicantion, user_email, **additional_data)
+        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
+        post_data = School.create_school(user_id, name, description, expected_applicantion, user_email)
         # print(post_data)
         msg = {
             "code": 200,
             "message": 'Successful',
             "data": {
                 'id': post_data.id,
-                'user_id': post_data.user_id,
+                'user_id': user_id,
                 'description': post_data.description,
                 'name': post_data.name,
                 'expected_applicantion': post_data.expected_applicantion,

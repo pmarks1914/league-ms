@@ -23,6 +23,8 @@ from sqlalchemy import ForeignKey
 import uuid
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.inspection import inspect
+import sys
+
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -31,29 +33,29 @@ list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
 
 
-def alchemy_to_json(obj, role, visited=None):
+def alchemy_to_json(obj, visited=None):
     if visited is None:
         visited = set()
-    if obj in visited:
+    if id(obj) in visited:
         return None  # Prevent infinite recursion
-    visited.add(obj)
+    visited.add(id(obj))
+    
     if isinstance(obj.__class__, DeclarativeMeta):
         fields = {}
-        if role == 'STUDENT':
-            exclude_fields = ["query", "registry", "query_class", "password", "apikey", "student"]
+        # Determine the role and exclude fields accordingly
+        if hasattr(obj, 'role') and obj.role == 'STUDENT':
+            exclude_fields = ["query", "registry", "query_class", "password", "student"]
         else:
-            exclude_fields = ["query", "registry", "query_class", "password", "apikey", "business"]
+            exclude_fields = ["query", "registry", "query_class", "password"]
 
         for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata' and x not in exclude_fields]:
-            data = obj.__getattribute__(field)
+            data = getattr(obj, field)
             try:
                 if not callable(data):
-                    # Check if the attribute is an instance of a SQLAlchemy model                    
+                    # Handle SQLAlchemy relationships
                     if isinstance(data.__class__, DeclarativeMeta):
-                        # Handle file relationship
                         fields[field] = alchemy_to_json(data, visited)
                     elif isinstance(data, list) and data and isinstance(data[0].__class__, DeclarativeMeta):
-                        # Handle nested objects
                         fields[field] = [alchemy_to_json(item, visited) for item in data]
                     else:
                         # this will fail on non-encodable values, like other classes
@@ -64,10 +66,12 @@ def alchemy_to_json(obj, role, visited=None):
             except TypeError:
                 fields[field] = str(data)
         return fields
+    else:
+        return obj
 
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(80), unique=True, nullable=False)
@@ -79,9 +83,9 @@ class User(db.Model):
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    school = db.relationship('School', back_populates='user')
-    student = db.relationship('Student', back_populates='user')
-    file = db.relationship('Fileupload', back_populates='user')
+    school = db.relationship('School',  back_populates='user', lazy='joined')
+    student = db.relationship('Student', back_populates='user', lazy='select')
+    file = db.relationship('Fileupload', back_populates='user', lazy='select')
     
     def json(self):
         return {
@@ -120,12 +124,12 @@ class User(db.Model):
         if new_data is None:
             return False
         elif new_data.role == 'STUDENT':
-            new_data_object = alchemy_to_json(new_data, 'STUDENT')
+            new_data_object = alchemy_to_json(new_data)
             return new_data_object
 
     def getUserById(id):
         new_data = User.query.filter_by(id=id).first()
-        new_data_object = alchemy_to_json(new_data, 'STUDENT')
+        new_data_object = alchemy_to_json(new_data)
         return new_data_object
 
     def getAllUsers(_email):
@@ -185,7 +189,7 @@ class User(db.Model):
 
 class School(db.Model):
     __tablename__ = 'school'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     name = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
     expected_applicantion = db.Column(db.Integer, nullable=True)
@@ -193,18 +197,19 @@ class School(db.Model):
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    programme = db.relationship('Programme', back_populates='school')
     # Add a foreign key, reference to the User table
-    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
     # Define a relationship to access the User object from a User object
-    user = db.relationship('User', back_populates='school')
-    file = db.relationship('Fileupload', back_populates='school')
+    user = db.relationship('User',  back_populates='school', lazy='joined')
+    file = db.relationship('Fileupload', back_populates='school', lazy='select')
+    programme = db.relationship('Programme', back_populates='school')
 
 
-    def create_school(user_id, name, **kwargs):
+    def create_school(user_id, name, description, expected_applicantion, user_email):
         _id = str(uuid.uuid4())
+        sys.setrecursionlimit(30000)
         try:
-            school = School(id=_id, user_id=user_id, name=name, **kwargs)
+            school = School(id=_id, user_id=user_id, name=name, description=description, expected_applicantion=expected_applicantion, updated_by=user_email, created_by=user_email) 
             db.session.add(school)
             db.session.commit()
             logger.info(f"School created with ID: {school.id}")
@@ -270,7 +275,7 @@ class School(db.Model):
 
 class Student(db.Model):
     __tablename__ = 'student'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     description = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
@@ -279,8 +284,8 @@ class Student(db.Model):
     # Add a foreign key, reference to the User table
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
     # Define a relationship to access the User object from a User object
-    user = db.relationship('User', back_populates='student')
-    application = db.relationship('Application', back_populates='student')
+    user = db.relationship('User', back_populates='student', lazy='select')
+    application = db.relationship('Application', back_populates='student', lazy='select')
 
     # def _repr_(self):
     #     return {
@@ -372,15 +377,15 @@ class Student(db.Model):
 
 class Application(db.Model):
     __tablename__ = 'application'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     description = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
-    programme = db.relationship('Programme', back_populates='application')
-    student = db.relationship('Student', back_populates='application')
+    programme = db.relationship('Programme', back_populates='application', lazy='select')
+    student = db.relationship('Student', back_populates='application', lazy='select')
 
     def create_application(description, **kwargs):
         _id = str(uuid.uuid4())
@@ -451,7 +456,7 @@ class Application(db.Model):
 
 class Programme(db.Model):
     __tablename__ = 'programme'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     name = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
@@ -463,9 +468,9 @@ class Programme(db.Model):
     # Add a foreign key, reference to the application table
     application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
     # Define a relationship to access the school object from a User object
-    school = db.relationship('School', back_populates='programme')
+    school = db.relationship('School', back_populates='programme', lazy='select')
     # Define a relationship to access the application object from a User object
-    application = db.relationship('Application', back_populates='programme')
+    application = db.relationship('Application', back_populates='programme', lazy='select')
 
     def create_programme(school_id, application_id, name, description, **kwargs):
         _id = str(uuid.uuid4())
@@ -536,7 +541,7 @@ class Programme(db.Model):
 
 class Code(db.Model):
     __tablename__ = 'code'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     code = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     account = db.Column(db.String(80), nullable=True)
@@ -600,7 +605,7 @@ class Code(db.Model):
 
 class Fileupload(db.Model):
     __tablename__ = 'file'
-    id = db.Column(db.String(36), primary_key=True, default=str(uuid.uuid4()), unique=True, nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
@@ -608,10 +613,10 @@ class Fileupload(db.Model):
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # Add a foreign key, reference to the user table
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'))    
-    user = db.relationship('User', back_populates='file')
+    user = db.relationship('User', back_populates='file', lazy='select')
     # Add a foreign key, reference to the school table
     school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
-    school = db.relationship('School', back_populates='file')
+    school = db.relationship('School', back_populates='file', lazy='select')
     
     # get file by business
     def getFileById(id, page=1, per_page=10): 
