@@ -388,10 +388,10 @@ class Application(db.Model):
     student = db.relationship('Student', back_populates='application', lazy='select')
     programme_id = db.Column(db.String(36), db.ForeignKey('programme.id'))
 
-    def create_application(description, programme_id, student_id):
+    def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
-            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id)
+            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id, updated_by=user_email, created_by=user_email)
             db.session.add(application)
             db.session.commit()
             logger.info(f"Application created with ID: {application.id}")
