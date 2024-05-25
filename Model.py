@@ -307,7 +307,7 @@ class Student(db.Model):
             'updated_on': self.updated_on
         }
 
-    def create_student(user_id, description, user_email, **kwargs):
+    def create_student(user_id, description, user_email):
         _id = str(uuid.uuid4())
         try:
             student = Student(id=_id, user_id=user_id, description=description, updated_by=user_email, created_by=user_email) 
@@ -386,11 +386,12 @@ class Application(db.Model):
     student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
     programme = db.relationship('Programme', back_populates='application', lazy='select')
     student = db.relationship('Student', back_populates='application', lazy='select')
+    programme_id = db.Column(db.String(36), db.ForeignKey('programme.id'))
 
-    def create_application(description, **kwargs):
+    def create_application(description, programme_id, student_id):
         _id = str(uuid.uuid4())
         try:
-            application = Application(id=_id, description=description, **kwargs)
+            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id)
             db.session.add(application)
             db.session.commit()
             logger.info(f"Application created with ID: {application.id}")
@@ -466,16 +467,16 @@ class Programme(db.Model):
     # Add a foreign key, reference to the school table
     school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
     # Add a foreign key, reference to the application table
-    application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
-    # Define a relationship to access the school object from a User object
+    # application_id = db.Column(db.String(36), db.ForeignKey('application.id'))
+    # Define a relationship to access object
     school = db.relationship('School', back_populates='programme', lazy='select')
-    # Define a relationship to access the application object from a User object
+    school = db.relationship('School', back_populates='programme', lazy='select')
     application = db.relationship('Application', back_populates='programme', lazy='select')
 
     def create_programme(school_id, application_id, name, description, **kwargs):
         _id = str(uuid.uuid4())
         try:
-            programme = Programme(school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
+            programme = Programme(id=_id, school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
             db.session.add(programme)
             db.session.commit()
             logger.info(f"Programme created with ID: {programme.id}")

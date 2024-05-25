@@ -311,21 +311,27 @@ def add_school():
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = School.create_school(user_id, name, description, expected_applicantion, user_email)
         # print(post_data)
-        msg = {
-            "code": 200,
-            "message": 'Successful',
-            "data": {
-                'id': post_data.id,
-                'user_id': user_id,
-                'description': post_data.description,
-                'name': post_data.name,
-                'expected_applicantion': post_data.expected_applicantion,
-                'created_by': post_data.created_by,
-                'updated_by': post_data.updated_by,
-                'created_on': str(post_data.created_on),
-                'updated_on': str(post_data.updated_on)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'name': post_data.name,
+                    'expected_applicantion': post_data.expected_applicantion,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
             }
-        }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     except Exception as e:
         msg = {
@@ -382,22 +388,28 @@ def add_student():
         user_data = User.getUserById(user_id)
         user_email = user_data['email'] or None
         description = data.get('description')
-        additional_data = {k: v for k, v in data.items() if k not in ['description']}
-        student = Student.create_student(user_id, description, user_email, **additional_data)
+        {k: v for k, v in data.items() if k not in ['description']}
+        student = Student.create_student(user_id, description, user_email)
         # print(student)
-        msg = {
-            "code": 200,
-            "message": 'Successful',
-            "data": {
-                'id': student.id,
-                'description': student.description,
-                'user_id': student.user_id,
-                'created_by': student.created_by,
-                'updated_by': student.updated_by,
-                'created_on': str(student.created_on),
-                'updated_on': str(student.updated_on)
+        if student:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': student.id,
+                    'description': student.description,
+                    'user_id': student.user_id,
+                    'created_by': student.created_by,
+                    'updated_by': student.updated_by,
+                    'created_on': str(student.created_on),
+                    'updated_on': str(student.updated_on)
+                }
             }
-        }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     except Exception as e:
         msg = {
