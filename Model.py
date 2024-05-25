@@ -473,10 +473,10 @@ class Programme(db.Model):
     school = db.relationship('School', back_populates='programme', lazy='select')
     application = db.relationship('Application', back_populates='programme', lazy='select')
 
-    def create_programme(school_id, application_id, name, description, **kwargs):
+    def create_programme(school_id, name, description, user_email):
         _id = str(uuid.uuid4())
         try:
-            programme = Programme(id=_id, school_id=school_id, application_id=application_id, name=name, description=description, **kwargs)
+            programme = Programme(id=_id, school_id=school_id, name=name, description=description, updated_by=user_email, created_by=user_email)
             db.session.add(programme)
             db.session.commit()
             logger.info(f"Programme created with ID: {programme.id}")
