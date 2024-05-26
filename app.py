@@ -1,4 +1,5 @@
 from crypt import methods
+import re
 import uuid
 from flask import Flask, jsonify, request, Response, render_template
 import requests, json
@@ -555,7 +556,6 @@ def add_programme():
                     'user_id': user_id,
                     'description': post_data.description,
                     'school_id': post_data.school_id,
-                    'email': post_data.email,
                     'created_by': post_data.created_by,
                     'updated_by': post_data.updated_by,
                     'created_on': str(post_data.created_on),
@@ -576,7 +576,7 @@ def add_programme():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
-@app.route('/programme/<string: id>', methods=['PATCH'])
+@app.route('/programme/<string:id>', methods=['PATCH'])
 def update_programme(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -587,11 +587,10 @@ def update_programme(id):
         user_id = token_data['id'] or None
         user_data = User.getUserById(user_id)
         user_email = user_data['email'] or None
-        description = data.get('description')
-        school_id = data.get('school_id')
         name = data.get('name')
-        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
-        post_data = Programme.create_programme(school_id, name, description, user_email)
+        # Extracting the fields to be updated from the request data
+        update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
+        post_data = Programme.update_programme(id, user_email, **update_fields)
         if post_data:
             msg = {
                 "code": 200,
@@ -601,7 +600,6 @@ def update_programme(id):
                     'user_id': user_id,
                     'description': post_data.description,
                     'school_id': post_data.school_id,
-                    'email': post_data.email,
                     'created_by': post_data.created_by,
                     'updated_by': post_data.updated_by,
                     'created_on': str(post_data.created_on),
