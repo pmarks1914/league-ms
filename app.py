@@ -576,6 +576,53 @@ def add_programme():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
+@app.route('/programme/<string: id>', methods=['PATCH'])
+def update_programme():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        description = data.get('description')
+        school_id = data.get('school_id')
+        name = data.get('name')
+        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
+        post_data = Programme.create_programme(school_id, name, description, user_email)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'school_id': post_data.school_id,
+                    'email': post_data.email,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+
 @app.route('/upload', methods=['POST'])
 def upload():
     return fileUpload(request)
