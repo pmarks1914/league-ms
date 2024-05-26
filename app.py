@@ -587,7 +587,6 @@ def update_programme(id):
         user_id = token_data['id'] or None
         user_data = User.getUserById(user_id)
         user_email = user_data['email'] or None
-        name = data.get('name')
         # Extracting the fields to be updated from the request data
         update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
         post_data = Programme.update_programme(id, user_email, **update_fields)
