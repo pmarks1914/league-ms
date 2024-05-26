@@ -514,9 +514,9 @@ class Programme(db.Model):
                 for key, value in kwargs.items():
                     if key in ['name', 'description', 'school_id']:
                         setattr(programme, key, value)
-                # programme.updated_on = datetime.utcnow()
-                # programme.updated_by = updated_by
-                # db.session.commit()
+                programme.updated_on = datetime.utcnow()
+                programme.updated_by = updated_by
+                db.session.commit()
                 logger.info(f"Programme updated with ID: {programme.id}")
             else:
                 logger.warning(f"No programme found with ID: {programme_id}")
