@@ -507,13 +507,15 @@ class Programme(db.Model):
             logger.error(f"Error retrieving all programmes: {e}")
             raise
 
-    def update_programme(programme_id, **kwargs):
+    def update_programme(programme_id, updated_by, **kwargs):
         try:
             programme = db.session.query(Programme).filter(Programme.id == programme_id).one_or_none() or []
             if programme:
                 for key, value in kwargs.items():
-                    setattr(programme, key, value)
+                    if key in ['name', 'description', 'school_id']:
+                        setattr(programme, key, value)
                 programme.updated_on = datetime.utcnow()
+                programme.updated_by = datetime.utcnow()
                 db.session.commit()
                 logger.info(f"Programme updated with ID: {programme.id}")
             else:

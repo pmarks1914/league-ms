@@ -577,7 +577,7 @@ def add_programme():
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 @app.route('/programme/<string: id>', methods=['PATCH'])
-def update_programme():
+def update_programme(id):
     token = request.headers.get('Authorization')
     msg = {}
     try:
