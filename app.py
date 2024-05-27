@@ -1,11 +1,12 @@
 from crypt import methods
+import re
 import uuid
 from flask import Flask, jsonify, request, Response, render_template
 import requests, json
 from Helper.helper import generate_random_code
 from fileManager.fileManager import fileUpload
 #import geocoder
-from Model import User, Code, db, Fileupload
+from Model import Application, Programme, School, Student, User, Code, db, Fileupload
 from Notification.Email.sendEmail import send_notification_email
 # from sendEmail import Email 
 from Settings import *
@@ -71,7 +72,7 @@ def get_token():
     match = User.username_password_match(request_data.get('email'), password_hashed)
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        token = jwt.encode({'exp': expiration_date}, app.config['SECRET_KEY'], algorithm='HS256')
+        token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
         msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
@@ -84,16 +85,16 @@ def token_required(f):
         token = request.headers.get('Authorization')
         token = token.split(" ")[1]        
         if not token:
-            return jsonify({'error': 'Token is missing', 'status': 401}), 401
+            return jsonify({'error': 'Token is missing', 'code': 401}), 401
         try:
             jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             return f(*args, **kwargs)
         except ExpiredSignatureError :
-            return jsonify({'error': 'Token has expired', 'status': 401}), 401
+            return jsonify({'error': 'Token has expired', 'code': 401}), 401
         except InvalidTokenError:
-            return jsonify({'error': 'Invalid Token', 'status': 401}), 401
+            return jsonify({'error': 'Invalid Token', 'code': 401}), 401
         except Exception as e:
-            return jsonify({'error': str(e), 'status': 401}), 401
+            return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
 
 @app.route('/user/<string:id>', methods=['GET'])
@@ -119,11 +120,17 @@ def user(id):
 @app.route('/v1/registration/', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
-    _first_name = request_data.get('first_name')
     msg = {}
     # print("fff")
+    if request_data.get('password1') == None or request_data.get('email') == None:
+        msg = {
+            "code": 305,
+            "message": 'Password or Email is required'
+        }
+        response = Response(json.dumps(msg), status=200, mimetype='application/json')
+        return response
     try:
-        _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()  
+        _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()
         _first_name = request_data.get('first_name')
         _last_name = request_data.get('last_name')
         _other_name = request_data.get('other_name')
@@ -251,6 +258,367 @@ def send_notification():
 @app.route('/')
 def index():
     return render_template('/fileUpload.html')
+
+
+
+@app.route('/school/<string:id>', methods=['GET', 'DELETE'])
+@token_required
+def school(id):
+    if request.method == 'GET':
+        try:
+            request_data = School.get_school_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if School.delete_school(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
+@app.route('/school', methods=['POST'])
+def add_school():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        print("user_data ", user_data['file'] )
+        user_email = user_data['email'] or None
+        description = data.get('description')
+        expected_applicantion = data.get('expected_applicantion')
+        name = data.get('name')
+        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
+        post_data = School.create_school(user_id, name, description, expected_applicantion, user_email)
+        # print(post_data)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'name': post_data.name,
+                    'expected_applicantion': post_data.expected_applicantion,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+
+@app.route('/student/<string:id>', methods=['GET', 'DELETE'])
+@token_required
+def student(id):
+    if request.method == 'GET':
+        try:
+            request_data = Student.get_student_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Student.delete_student(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
+@app.route('/student', methods=['POST'])
+def add_student():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        description = data.get('description')
+        {k: v for k, v in data.items() if k not in ['description']}
+        student = Student.create_student(user_id, description, user_email)
+        # print(student)
+        if student:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': student.id,
+                    'description': student.description,
+                    'user_id': student.user_id,
+                    'created_by': student.created_by,
+                    'updated_by': student.updated_by,
+                    'created_on': str(student.created_on),
+                    'updated_on': str(student.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+@app.route('/application/<string:id>', methods=['GET', 'DELETE'])
+@token_required
+def application(id):
+    if request.method == 'GET':
+        try:
+            request_data = Application.get_application_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Application.delete_application(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+
+@app.route('/application', methods=['POST'])
+def add_application():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        description = data.get('description')
+        programme_id = data.get('programme_id')
+        student_id = data.get('student_id')
+        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
+        post_data = Application.create_application(description, programme_id, student_id, user_email)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'student_id': post_data.student_id,
+                    'programme_id': post_data.programme_id,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+
+@app.route('/programme/<string:id>', methods=['GET', 'DELETE'])
+@token_required
+def programme(id):
+    if request.method == 'GET':
+        try:
+            request_data = Programme.get_programme_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            # print(e)
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            request_data = Programme.delete_programme(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful'
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
+@app.route('/programme', methods=['POST'])
+def add_programme():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        description = data.get('description')
+        school_id = data.get('school_id')
+        name = data.get('name')
+        {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
+        post_data = Programme.create_programme(school_id, name, description, user_email)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'school_id': post_data.school_id,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
+@app.route('/programme/<string:id>', methods=['PATCH'])
+def update_programme(id):
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        # Extracting the fields to be updated from the request data
+        update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
+        post_data = Programme.update_programme(id, user_email, **update_fields)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'school_id': post_data.school_id,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
 
 @app.route('/upload', methods=['POST'])
 def upload():
