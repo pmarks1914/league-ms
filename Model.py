@@ -422,13 +422,14 @@ class Application(db.Model):
             logger.error(f"Error retrieving all applications: {e}")
             raise
 
-    def update_application(application_id, **kwargs):
+    def update_application(application_id, updated_by, **kwargs):
         try:
             application = db.session.query(Application).filter(Application.id == application_id).one_or_none() or []
             if application:
                 for key, value in kwargs.items():
                     setattr(application, key, value)
                 application.updated_on = datetime.utcnow()
+                application.updated_by = updated_by
                 db.session.commit()
                 logger.info(f"Application updated with ID: {application.id}")
             else:
