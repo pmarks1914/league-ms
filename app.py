@@ -501,6 +501,11 @@ def add_application():
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 
+@app.route('/application/<string:id>', methods=['PATCH'])
+def update_application(id):
+    token = request.headers.get('Authorization')
+    msg = {}
+
 @app.route('/programme/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def programme(id):
