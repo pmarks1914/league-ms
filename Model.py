@@ -341,13 +341,14 @@ class Student(db.Model):
             logger.error(f"Error retrieving all students: {e}")
             raise
 
-    def update_student(student_id, **kwargs):
+    def update_student(student_id, updated_by, **kwargs):
         try:
             student = db.session.query(Student).filter(Student.id == student_id).one_or_none() or []
             if student:
                 for key, value in kwargs.items():
                     setattr(student, key, value)
                 student.updated_on = datetime.utcnow()
+                student.updated_by = updated_by
                 db.session.commit()
                 logger.info(f"Student updated with ID: {student.id}")
             else:
