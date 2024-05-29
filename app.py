@@ -433,7 +433,7 @@ def update_student(id):
         user_email = user_data['email'] or None
         # Extracting the fields to be updated from the request data
         update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
-        post_data = Programme.update_programme(id, user_email, **update_fields)
+        post_data = Student.update_student(id, user_email, **update_fields)
         if post_data:
             msg = {
                 "code": 200,
@@ -442,7 +442,7 @@ def update_student(id):
                     'id': post_data.id,
                     'user_id': user_id,
                     'description': post_data.description,
-                    'school_id': post_data.school_id,
+                    'updated_by_id': user_email,
                     'created_by': post_data.created_by,
                     'updated_by': post_data.updated_by,
                     'created_on': str(post_data.created_on),
