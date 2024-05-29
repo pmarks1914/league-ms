@@ -420,6 +420,11 @@ def add_student():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
+@app.route('/student/<string:id>', methods=['PATCH'])
+def update_student(id):
+    token = request.headers.get('Authorization')
+    msg = {}
+
 @app.route('/application/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def application(id):
@@ -684,3 +689,4 @@ def fileDelete(id):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5002)
+
