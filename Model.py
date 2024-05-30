@@ -240,13 +240,14 @@ class School(db.Model):
             logger.error(f"Error retrieving all schools: {e}")
             raise
 
-    def update_school(school_id, **kwargs):
+    def update_school(school_id, updated_by, **kwargs):
         try:
             school = db.session.query(School).filter(School.id == school_id).one_or_none() or []
             if school:
                 for key, value in kwargs.items():
                     setattr(school, key, value)
                 school.updated_on = datetime.utcnow()
+                school.updated_by = updated_by
                 db.session.commit()
                 logger.info(f"School updated with ID: {school.id}")
             else:
