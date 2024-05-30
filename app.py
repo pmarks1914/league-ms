@@ -343,6 +343,9 @@ def add_school():
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 
+@app.route('/school/<string:id>', methods=['PATCH'])
+def update_school(id):
+    pass
 @app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def student(id):
