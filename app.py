@@ -727,7 +727,8 @@ def fileDelete(id):
     if request.method == 'DELETE':
         return Fileupload.delete_file(id)
     else:
-        pass
+        return Response( json.dumps("msg"), status=404, mimetype='application/json')
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5002)
