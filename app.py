@@ -724,13 +724,17 @@ def uploadUpdate(id):
 
 @app.route('/file/delete/<string:id>', methods=['DELETE'])
 def fileDelete(id):
-    msg = {}
+    msg = {
+        "code": 403,
+        "message": 'Failed',
+    }
     if request.method == 'DELETE':
         if Fileupload.delete_file(id):
             msg = {
                 "code": 200,
                 "message": 'Successful',
             }
+            return Response( json.dumps(msg), status=200, mimetype='application/json')
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     else:
         msg = {
