@@ -731,7 +731,7 @@ def fileDelete(id):
             "code": 404,
             "message": 'Failed',
         }
-        return Response( json.dumps(""), status=404, mimetype='application/json')
+        return Response( json.dumps(msg), status=404, mimetype='application/json')
 
 
 if __name__ == "__main__":
