@@ -727,7 +727,11 @@ def fileDelete(id):
     if request.method == 'DELETE':
         return Fileupload.delete_file(id)
     else:
-        return Response( json.dumps("msg"), status=404, mimetype='application/json')
+        msg = {
+            "code": 404,
+            "message": 'Failed',
+        }
+        return Response( json.dumps(""), status=404, mimetype='application/json')
 
 
 if __name__ == "__main__":
