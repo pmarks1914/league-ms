@@ -721,6 +721,12 @@ def uploadUpdate(id):
         return Fileupload.getFileById(id)
     if request.method == 'PATCH':
         return fileUpload(request, id)
+    msg = {
+        "code": 404,
+        "message": 'Failed',
+    }
+    return Response( json.dumps(msg), status=404, mimetype='application/json')
+
 
 @app.route('/file/delete/<string:id>', methods=['DELETE'])
 def fileDelete(id):
