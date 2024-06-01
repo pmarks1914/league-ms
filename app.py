@@ -713,7 +713,25 @@ def update_programme(id):
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    return fileUpload(request)
+    msg = {
+        "code": 403,
+        "message": 'Failed',
+    }
+    if request.method == 'POST':
+        if fileUpload(request):
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+            }
+            return Response( json.dumps(msg), status=200, mimetype='application/json')
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    else:
+        msg = {
+            "code": 404,
+            "message": 'Failed',
+        }
+        return Response( json.dumps(msg), status=404, mimetype='application/json')
+
 
 @app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
 def uploadUpdate(id):
