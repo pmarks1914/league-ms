@@ -361,6 +361,12 @@ def update_school(id):
             msg = {
                 "code": 200,
                 "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'updated_by_id': user_email,
+                }
             }
         else:
             msg = {
