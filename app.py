@@ -343,7 +343,7 @@ def add_school():
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 
-@app.route('/school/<string:id>', methods=['PATCH'])
+@app.route('/update/school/<string:id>', methods=['PATCH'])
 def update_school(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -464,7 +464,7 @@ def add_student():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
-@app.route('/student/<string:id>', methods=['PATCH'])
+@app.route('/update/student/<string:id>', methods=['PATCH'])
 def update_student(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -708,7 +708,7 @@ def add_programme():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
-@app.route('/programme/<string:id>', methods=['PATCH'])
+@app.route('/update/programme/<string:id>', methods=['PATCH'])
 def update_programme(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -774,7 +774,7 @@ def upload():
         return Response( json.dumps(msg), status=404, mimetype='application/json')
 
 
-@app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
+@app.route('/update/upload/<string:id>', methods=['PATCH', 'GET'])
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
