@@ -366,6 +366,10 @@ def update_school(id):
                     'user_id': user_id,
                     'description': post_data.description,
                     'updated_by_id': user_email,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
                 }
             }
         else:
