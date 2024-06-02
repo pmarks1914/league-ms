@@ -357,6 +357,16 @@ def update_school(id):
         # Extracting the fields to be updated from the request data
         update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
         post_data = School.update_school(id, user_email, **update_fields)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
         
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     except Exception as e:
