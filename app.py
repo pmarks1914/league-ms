@@ -347,7 +347,26 @@ def add_school():
 def update_school(id):
     token = request.headers.get('Authorization')
     msg = {}
-    
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        # Extracting the fields to be updated from the request data
+        update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
+        post_data = School.update_school(id, user_email, **update_fields)
+        
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
 @app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def student(id):
