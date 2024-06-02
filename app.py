@@ -345,7 +345,9 @@ def add_school():
 
 @app.route('/school/<string:id>', methods=['PATCH'])
 def update_school(id):
-    pass
+    token = request.headers.get('Authorization')
+    msg = {}
+    
 @app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def student(id):
