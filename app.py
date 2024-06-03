@@ -75,8 +75,8 @@ def get_token():
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
         token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
         if match['role'] == 'STUDENT':
-            student_id = User.getUserById(match['id']) or None
-            student_id = student_id['id'] or None
+            student_id = Student.get_user_by_id(match['id']) or None
+            student_id = student_id.id or None
         msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
@@ -560,6 +560,9 @@ def add_application():
         description = data.get('description')
         programme_id = data.get('programme_id')
         student_id = data.get('student_id')
+        student_id = Student.get_user_by_id(user_id) or None
+        student_id = student_id['id'] or None
+
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = Application.create_application(description, programme_id, student_id, user_email)
         if post_data:

@@ -332,6 +332,18 @@ class Student(db.Model):
         except Exception as e:
             logger.error(f"Error retrieving student by ID: {e}")
             raise
+    
+    def get_user_by_id(id):
+        try:
+            student = db.session.query(Student).filter(Student.user_id == id).first() or []
+            if student:
+                logger.info(f"Student retrieved with ID: {id}")
+            else:
+                logger.warning(f"No student found with ID: {id}")
+            return student
+        except Exception as e:
+            logger.error(f"Error retrieving student by ID: {e}")
+            raise
 
     def get_all_students():
         try:
