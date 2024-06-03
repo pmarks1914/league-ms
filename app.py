@@ -67,13 +67,17 @@ def callbackMfs():
 
 @app.route('/login', methods=['POST'])
 def get_token():
+    student_id = None
     request_data = request.get_json()
     password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
     match = User.username_password_match(request_data.get('email'), password_hashed)
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
         token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
-        msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+        if match['role'] == 'STUDENT':
+            student_id = User.getUserById(match['id']) or None
+            student_id = student_id['id'] or None
+        msg = { "user": match | {"student_id":  ''}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
     else:
@@ -343,7 +347,7 @@ def add_school():
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
 
-@app.route('/update/school/<string:id>', methods=['PATCH'])
+@app.route('/school/<string:id>', methods=['PATCH'])
 def update_school(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -464,7 +468,7 @@ def add_student():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
-@app.route('/update/student/<string:id>', methods=['PATCH'])
+@app.route('/student/<string:id>', methods=['PATCH'])
 def update_student(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -708,7 +712,7 @@ def add_programme():
         }
         return Response( json.dumps(msg), status=500, mimetype='application/json')
 
-@app.route('/update/programme/<string:id>', methods=['PATCH'])
+@app.route('/programme/<string:id>', methods=['PATCH'])
 def update_programme(id):
     token = request.headers.get('Authorization')
     msg = {}
@@ -774,7 +778,7 @@ def upload():
         return Response( json.dumps(msg), status=404, mimetype='application/json')
 
 
-@app.route('/update/upload/<string:id>', methods=['PATCH', 'GET'])
+@app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
