@@ -67,13 +67,17 @@ def callbackMfs():
 
 @app.route('/login', methods=['POST'])
 def get_token():
+    student_id = None
     request_data = request.get_json()
     password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
     match = User.username_password_match(request_data.get('email'), password_hashed)
     if match is not None:
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
         token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
-        msg = { "user": match, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+        if match['role'] == 'STUDENT':
+            student_id = User.getUserById(match['id']) or None
+            student_id = student_id['id'] or None
+        msg = { "user": match | {"student_id":  ''}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
     else:
@@ -345,7 +349,48 @@ def add_school():
 
 @app.route('/school/<string:id>', methods=['PATCH'])
 def update_school(id):
-    pass
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        # Extracting the fields to be updated from the request data
+        update_fields = {key: value for key, value in data.items() if key in ['name', 'description', 'school_id']}
+        post_data = School.update_school(id, user_email, **update_fields)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'id': post_data.id,
+                    'user_id': user_id,
+                    'description': post_data.description,
+                    'updated_by_id': user_email,
+                    'created_by': post_data.created_by,
+                    'updated_by': post_data.updated_by,
+                    'created_on': str(post_data.created_on),
+                    'updated_on': str(post_data.updated_on)
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
+
 @app.route('/student/<string:id>', methods=['GET', 'DELETE'])
 @token_required
 def student(id):
