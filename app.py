@@ -77,7 +77,7 @@ def get_token():
         if match['role'] == 'STUDENT':
             student_id = User.getUserById(match['id']) or None
             student_id = student_id['id'] or None
-        msg = { "user": match | {"student_id":  ''}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+        msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
     else:
