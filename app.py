@@ -559,9 +559,9 @@ def add_application():
         user_email = user_data['email'] or None
         description = data.get('description')
         programme_id = data.get('programme_id')
-        student_id = data.get('student_id')
-        student_id = Student.get_user_by_id(user_id) or None
+        student_id = Student.get_user_by_id(user_id)
         student_id = student_id['id'] or None
+        print(student_id)
 
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = Application.create_application(description, programme_id, student_id, user_email)
