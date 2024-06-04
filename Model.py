@@ -166,6 +166,7 @@ class User(db.Model):
             with app.app_context():
                 db.session.add(new_user)
                 db.session.commit()
+                Student.create_student(user_id, None, _email)
         except Exception as e:
             db.session.rollback()  # Rollback the transaction in case of an error
             print(f"Error:: {e}")
