@@ -166,6 +166,7 @@ class User(db.Model):
             with app.app_context():
                 db.session.add(new_user)
                 db.session.commit()
+                Student.create_student(user_id, None, _email)
         except Exception as e:
             db.session.rollback()  # Rollback the transaction in case of an error
             print(f"Error:: {e}")
@@ -328,6 +329,18 @@ class Student(db.Model):
                 logger.info(f"Student retrieved with ID: {student_id}")
             else:
                 logger.warning(f"No student found with ID: {student_id}")
+            return student
+        except Exception as e:
+            logger.error(f"Error retrieving student by ID: {e}")
+            raise
+    
+    def get_user_by_id(id):
+        try:
+            student = db.session.query(Student).filter(Student.user_id == id).first() or []
+            if student:
+                logger.info(f"Student retrieved with ID: {id}")
+            else:
+                logger.warning(f"No student found with ID: {id}")
             return student
         except Exception as e:
             logger.error(f"Error retrieving student by ID: {e}")
