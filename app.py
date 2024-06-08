@@ -75,7 +75,7 @@ def testd():
         return {"tes": str(e)}
 
 @app.route('/v1/callback/mfs', methods=['POST'])
-def callbackMfs():
+def callbackfs():
     try:
         request_data = request.json
         # print("mfs callback >>> ", request_data )
