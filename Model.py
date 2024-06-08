@@ -127,12 +127,32 @@ class User(db.Model):
             new_data_object = alchemy_to_json(new_data)
             return new_data_object
 
+    def getAllUsers(page, per_page):        
+        # Determine the page and number of items per page from the request (if provided)
+        # Query the database with pagination
+        pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
+        # Extract the items for the current page
+        new_data = pagination.items
+        # Render nested objects
+        new_data_object = [alchemy_to_json(item) for item in new_data]
+        # Prepare pagination information to be returned along with the data
+        pagination_data = {
+            'total': pagination.total,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': pagination.pages
+        }
+        return {
+            'data': new_data_object,
+            'pagination': pagination_data
+        }
+
     def getUserById(id):
         new_data = User.query.filter_by(id=id).first()
         new_data_object = alchemy_to_json(new_data)
         return new_data_object
 
-    def getAllUsers(_email):
+    def getAllUsersByEmail(_email):
         joined_table_data = []
         # user_data = db.session.query(User).filter_by(email=_email).join(Business).all()
         # user_data = db.session.query(User, Business).filter_by(email=_email).join(Business).all()
@@ -605,7 +625,6 @@ class Code(db.Model):
         # Determine the page and number of items per page from the request (if provided)
         # Query the database with pagination
         pagination = Code.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
-
         # Extract the items for the current page
         new_data = pagination.items
         # Render nested objects

@@ -28,20 +28,45 @@ from dotenv import dotenv_values
 
 get_env = dotenv_values(".env")  
 
-CORS(app)
+# CORS(app)
 app.config['SECRET_KEY'] = get_env['SECRET_KEY']        
+# CORS(app, resources={r"/*": {"origins": "*"}}) 
 
+    
+def token_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        token = token.split(" ")[1]        
+        if not token:
+            return jsonify({'error': 'Token is missing', 'code': 401}), 401
+        try:
+            jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            return f(*args, **kwargs)
+        except ExpiredSignatureError :
+            return jsonify({'error': 'Token has expired', 'code': 401}), 401
+        except InvalidTokenError:
+            return jsonify({'error': 'Invalid Token', 'code': 401}), 401
+        except Exception as e:
+            return jsonify({'error': str(e), 'code': 401}), 401
+    return wrapper
 
-
-@app.route('/test', methods=['POST'])
+@app.route('/test', methods=['GET'])
+# @token_required
 def testd():
     try:
-        print((request.json)['test'] )
-        # user = User.getAllUsers((request.json)['email'])
+        # print((request.json)['test'] )
+
+    # Extract query parameters
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        user = User.getAllUsers(page, per_page)
 
         msg = {
             "code": 200,
-            "helpString": 'Successful'
+            "helpString": 'Successful',
+            "user": user['data'],
+            "pagination": user['pagination']
         }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response    
@@ -82,24 +107,6 @@ def get_token():
         return response 
     else:
         return Response('', 401, mimetype='application/json')
-    
-def token_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        token = token.split(" ")[1]        
-        if not token:
-            return jsonify({'error': 'Token is missing', 'code': 401}), 401
-        try:
-            jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            return f(*args, **kwargs)
-        except ExpiredSignatureError :
-            return jsonify({'error': 'Token has expired', 'code': 401}), 401
-        except InvalidTokenError:
-            return jsonify({'error': 'Invalid Token', 'code': 401}), 401
-        except Exception as e:
-            return jsonify({'error': str(e), 'code': 401}), 401
-    return wrapper
 
 @app.route('/user/<string:id>', methods=['GET'])
 @token_required
@@ -223,7 +230,7 @@ def update_password(id):
             else:
                 msg = {
                     "code": 301,
-                    "msg": f"user detail(s) failed to updated",
+                    "msg": f"user detail(s) failed to updated.",
                     # "data": 'f{instance_dict}'
             }
         except Exception as e:
@@ -255,7 +262,7 @@ def send_notification():
             else:
                 return 'Failed to send notification.'
         else:
-            return 'User does not exist'
+            return 'User does not exist.'
     except Exception as e:
         return str(e)
 
