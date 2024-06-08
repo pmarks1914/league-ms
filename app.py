@@ -223,7 +223,7 @@ def update_password(id):
             if User.update_user( id, request_data.get('password1'), resource):
                 msg = {
                         "code": 200,
-                        "msg": f"user detail(s) updated: {get_req_keys}",
+                        "message": f"user detail(s) updated: {get_req_keys}",
                         # "data": 'f{instance_dict}'
                 }
             else:
