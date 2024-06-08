@@ -64,7 +64,7 @@ def testd():
 
         msg = {
             "code": 200,
-            "msg": 'Successful',
+            "message": 'Successful',
             "user": user['data'],
             "pagination": user['pagination']
         }
