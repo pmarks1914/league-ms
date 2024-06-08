@@ -236,7 +236,7 @@ def update_password(id):
             msg = {
                     "code": 501,
                     "error :" : str(e),
-                    "msg": "server error." 
+                    "message": "server error." 
                 }
     # print("resource", resource)
 
