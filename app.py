@@ -64,7 +64,7 @@ def testd():
 
         msg = {
             "code": 200,
-            "helpString": 'Successful',
+            "msg": 'Successful',
             "user": user['data'],
             "pagination": user['pagination']
         }
@@ -81,7 +81,7 @@ def callbackMfs():
         # print("mfs callback >>> ", request_data )
         msg = {
             "code": 200,
-            "helpString": 'Successful',
+            "msg": 'Successful',
             "data": request_data
         }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
