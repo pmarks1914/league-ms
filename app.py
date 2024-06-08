@@ -81,7 +81,7 @@ def callbackMfs():
         # print("mfs callback >>> ", request_data )
         msg = {
             "code": 200,
-            "msg": 'Successful',
+            "message": 'Successful',
             "data": request_data
         }
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
