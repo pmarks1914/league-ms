@@ -229,7 +229,7 @@ def update_password(id):
             else:
                 msg = {
                     "code": 301,
-                    "msg": f"user detail(s) failed to updated.",
+                    "message": f"user detail(s) failed to updated.",
                     # "data": 'f{instance_dict}'
             }
         except Exception as e:
