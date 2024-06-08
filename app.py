@@ -216,7 +216,7 @@ def update_password(id):
     if validate_status is False:
         msg = {
             "code": 201,
-            "msg": str(validate_list)
+            "message": str(validate_list)
         }
     else:
         try:
