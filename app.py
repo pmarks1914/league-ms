@@ -155,8 +155,7 @@ def add_user_registration():
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
-                "error": "user already registtered",
-                "helpString": 'Data passed" }'
+                "error": "user already registtered"
             }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response
