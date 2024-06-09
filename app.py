@@ -29,8 +29,9 @@ from dotenv import dotenv_values
 get_env = dotenv_values(".env")  
 
 # CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['SECRET_KEY'] = get_env['SECRET_KEY']        
-# CORS(app, resources={r"/*": {"origins": "*"}}) 
+ 
 
     
 def token_required(f):
@@ -95,18 +96,22 @@ def get_token():
     student_id = None
     request_data = request.get_json()
     password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
-    match = User.username_password_match(request_data.get('email'), password_hashed)
-    if match is not None:
-        expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
-        if match['role'] == 'STUDENT':
-            student_id = Student.get_user_by_id(match['id']) or None
-            student_id = student_id.id or None
-        msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
-        response = Response( json.dumps(msg), status=200, mimetype='application/json')
-        return response 
-    else:
-        return Response('', 401, mimetype='application/json')
+    try:
+        match = User.username_password_match(request_data.get('email'), password_hashed)
+        if match is not None:
+            expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
+            token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
+            if match['role'] == 'STUDENT':
+                student_id = Student.get_user_by_id(match['id']) or None
+                student_id = student_id.id or None
+            msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        else:
+            return Response('', 401, mimetype='application/json')
+    except Exception as e:
+            # print(e)
+            return {"code": 500, "message": 'Failed', "error": str(e)}
 
 @app.route('/user/<string:id>', methods=['GET'])
 @token_required
