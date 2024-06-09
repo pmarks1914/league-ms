@@ -201,8 +201,6 @@ class User(db.Model):
         db.session.commit()
         return True
         
-        
-
     def delete_user(_id):
         is_successful = User.query.filter_by(id=_id).delete()
         db.session.commit()
@@ -614,9 +612,10 @@ class Code(db.Model):
         db.session.commit()
         return bool(is_successful)
 
-    def getCodeByOTP(otp):
-        if Code.query.filter_by(code=otp):
-            return Code.query.filter_by(code=otp).first()
+    def getCodeByOTP(_otp, email):
+        print(">>>>", _otp, email)
+        if Code.query.filter_by(code=_otp).filter_by(account=email).first():
+            return Code.query.filter_by(code=_otp).filter_by(account=email).first()
         else:
             return None
 

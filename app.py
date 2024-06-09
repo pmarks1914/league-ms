@@ -28,8 +28,8 @@ from dotenv import dotenv_values
 
 get_env = dotenv_values(".env")  
 
-# CORS(app)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
+# CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['SECRET_KEY'] = get_env['SECRET_KEY']        
  
 
@@ -135,18 +135,27 @@ def user(id):
     else:
         return {"code": 400, "message": 'Failed' }
         
-@app.route('/v1/registration/', methods=['POST'])
+@app.route('/v1/registration', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
     msg = {}
-    # print("fff")
+    code = request_data.get('otp')
+    email = request_data.get('email')
+    # print("fff", request_data.get('otp'), request_data.get('email') )
+    # 804233
+    # code_data = Code.getCodeByOTP(request_data.get('otp'), request_data.get('email') )
+    # print("code_data ", code_data)
+    # print(code, email)
     if request_data.get('password1') == None or request_data.get('email') == None:
         msg = {
             "code": 305,
             "message": 'Password or Email is required'
         }
         response = Response(json.dumps(msg), status=200, mimetype='application/json')
-        return response
+        return response 
+    elif Code.getCodeByOTP(code, email) is None:
+        return jsonify({ 'code': 403, 'message': 'Resource not found, check your email for the required code'}), 403
+
     try:
         _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()
         _first_name = request_data.get('first_name')
@@ -171,6 +180,7 @@ def add_user_registration():
             # print(json.dumps(user))
             invalidUserOjectErrorMsg = {
                 "code": 200,
+                "message": 'Successful',
                 "data": {
                     "first_name": request_data.get('first_name'),
                     "last_name": request_data.get('last_name'),
@@ -196,13 +206,13 @@ def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserById(id, request_data.get('email'))
-    print(Code.getCodeByOTP(request_data.get('code')))
+    # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
     validate_list = ["id", "password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
     if resource is None:
         return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
-    elif Code.getCodeByOTP(request_data.get('code')) is None:
+    elif Code.getCodeByOTP(request_data.get('code'), request_data.get('email') ) is None:
         return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
     # Get the data from the request
     data = request.get_json()
@@ -260,6 +270,8 @@ def send_notification():
     # print(users.id)
     try:
         if users:
+            return 'User exist.'
+        else:
             code = generate_random_code()
             render_html = render_template('email.html', code=code)
             Code.createCode(to_email, code, "OTP")
@@ -267,8 +279,6 @@ def send_notification():
                 return jsonify({ 'code': 200, 'msg': 'Notification sent successfully'}), 200
             else:
                 return 'Failed to send notification.'
-        else:
-            return 'User does not exist.'
     except Exception as e:
         return str(e)
 
