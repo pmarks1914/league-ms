@@ -98,7 +98,7 @@ def get_token():
     password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
     try:
         match = User.username_password_match(request_data.get('email'), password_hashed)
-        if match is not None:
+        if match != None and match != False:
             expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
             token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
             if match['role'] == 'STUDENT':
@@ -108,10 +108,12 @@ def get_token():
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         else:
-            return Response('', 401, mimetype='application/json')
+            invalidUserOjectErrorMsg= {"code": 404, "User unavailable": 'Failed'}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=404, mimetype='application/json')
     except Exception as e:
             # print(e)
-            return {"code": 500, "message": 'Failed', "error": str(e)}
+            invalidUserOjectErrorMsg= {"code": 500, "message": 'Failed', "error": str(e)}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=500, mimetype='application/json')
 
 @app.route('/user/<string:id>', methods=['GET'])
 @token_required
