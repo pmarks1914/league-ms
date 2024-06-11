@@ -29,59 +29,10 @@ from dotenv import dotenv_values
 get_env = dotenv_values(".env")  
 
 CORS(app)
+# CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['SECRET_KEY'] = get_env['SECRET_KEY']        
+ 
 
-
-
-@app.route('/test', methods=['POST'])
-def testd():
-    try:
-        print((request.json)['test'] )
-        # user = User.getAllUsers((request.json)['email'])
-
-        msg = {
-            "code": 200,
-            "helpString": 'Successful'
-        }
-        response = Response( json.dumps(msg), status=200, mimetype='application/json')
-        return response    
-    except Exception as e:
-        # print(e)
-        return {"tes": str(e)}
-
-@app.route('/v1/callback/mfs', methods=['POST'])
-def callbackMfs():
-    try:
-        request_data = request.json
-        # print("mfs callback >>> ", request_data )
-        msg = {
-            "code": 200,
-            "helpString": 'Successful',
-            "data": request_data
-        }
-        response = Response( json.dumps(msg), status=200, mimetype='application/json')
-        return response 
-    except Exception as e:
-        # print(e)
-        return {"tes": str(e)}
-
-@app.route('/login', methods=['POST'])
-def get_token():
-    student_id = None
-    request_data = request.get_json()
-    password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
-    match = User.username_password_match(request_data.get('email'), password_hashed)
-    if match is not None:
-        expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
-        if match['role'] == 'STUDENT':
-            student_id = Student.get_user_by_id(match['id']) or None
-            student_id = student_id.id or None
-        msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
-        response = Response( json.dumps(msg), status=200, mimetype='application/json')
-        return response 
-    else:
-        return Response('', 401, mimetype='application/json')
     
 def token_required(f):
     @wraps(f)
@@ -100,6 +51,69 @@ def token_required(f):
         except Exception as e:
             return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
+
+@app.route('/test', methods=['GET'])
+# @token_required
+def testd():
+    try:
+        # print((request.json)['test'] )
+
+    # Extract query parameters
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        user = User.getAllUsers(page, per_page)
+
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "user": user['data'],
+            "pagination": user['pagination']
+        }
+        response = Response( json.dumps(msg), status=200, mimetype='application/json')
+        return response    
+    except Exception as e:
+        # print(e)
+        return {"tes": str(e)}
+
+@app.route('/v1/callback/mfs', methods=['POST'])
+def callbackfs():
+    try:
+        request_data = request.json
+        # print("mfs callback >>> ", request_data )
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "data": request_data
+        }
+        response = Response( json.dumps(msg), status=200, mimetype='application/json')
+        return response 
+    except Exception as e:
+        # print(e)
+        return {"tes": str(e)}
+
+@app.route('/login', methods=['POST'])
+def get_token():
+    student_id = None
+    request_data = request.get_json()
+    password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
+    try:
+        match = User.username_password_match(request_data.get('email'), password_hashed)
+        if match != None and match != False:
+            expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
+            token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
+            if match['role'] == 'STUDENT':
+                student_id = Student.get_user_by_id(match['id']) or None
+                student_id = student_id.id or None
+            msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        else:
+            invalidUserOjectErrorMsg= {"code": 404, "User unavailable": 'Failed'}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=404, mimetype='application/json')
+    except Exception as e:
+            # print(e)
+            invalidUserOjectErrorMsg= {"code": 500, "message": 'Failed', "error": str(e)}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=500, mimetype='application/json')
 
 @app.route('/user/<string:id>', methods=['GET'])
 @token_required
@@ -121,18 +135,27 @@ def user(id):
     else:
         return {"code": 400, "message": 'Failed' }
         
-@app.route('/v1/registration/', methods=['POST'])
+@app.route('/v1/registration', methods=['POST'])
 def add_user_registration():
     request_data = request.get_json()
     msg = {}
-    # print("fff")
+    code = request_data.get('otp')
+    email = request_data.get('email')
+    # print("fff", request_data.get('otp'), request_data.get('email') )
+    # 804233
+    # code_data = Code.getCodeByOTP(request_data.get('otp'), request_data.get('email') )
+    # print("code_data ", code_data)
+    # print(code, email)
     if request_data.get('password1') == None or request_data.get('email') == None:
         msg = {
             "code": 305,
             "message": 'Password or Email is required'
         }
         response = Response(json.dumps(msg), status=200, mimetype='application/json')
-        return response
+        return response 
+    elif Code.getCodeByOTP(code, email) is None:
+        return jsonify({ 'code': 403, 'message': 'Resource not found, check your email for the required code'}), 403
+
     try:
         _password = hashlib.sha256((request_data.get('password1')).encode()).hexdigest()
         _first_name = request_data.get('first_name')
@@ -148,8 +171,7 @@ def add_user_registration():
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
-                "error": "user already registtered",
-                "helpString": 'Data passed" }'
+                "error": "user already registtered"
             }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response
@@ -158,6 +180,7 @@ def add_user_registration():
             # print(json.dumps(user))
             invalidUserOjectErrorMsg = {
                 "code": 200,
+                "message": 'Successful',
                 "data": {
                     "first_name": request_data.get('first_name'),
                     "last_name": request_data.get('last_name'),
@@ -183,13 +206,13 @@ def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserById(id, request_data.get('email'))
-    print(Code.getCodeByOTP(request_data.get('code')))
+    # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
     validate_list = ["id", "password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
     if resource is None:
         return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
-    elif Code.getCodeByOTP(request_data.get('code')) is None:
+    elif Code.getCodeByOTP(request_data.get('code'), request_data.get('email') ) is None:
         return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
     # Get the data from the request
     data = request.get_json()
@@ -210,27 +233,27 @@ def update_password(id):
     if validate_status is False:
         msg = {
             "code": 201,
-            "msg": str(validate_list)
+            "message": str(validate_list)
         }
     else:
         try:
             if User.update_user( id, request_data.get('password1'), resource):
                 msg = {
                         "code": 200,
-                        "msg": f"user detail(s) updated: {get_req_keys}",
+                        "message": f"user detail(s) updated: {get_req_keys}",
                         # "data": 'f{instance_dict}'
                 }
             else:
                 msg = {
                     "code": 301,
-                    "msg": f"user detail(s) failed to updated",
+                    "message": f"user detail(s) failed to updated.",
                     # "data": 'f{instance_dict}'
             }
         except Exception as e:
             msg = {
                     "code": 501,
                     "error :" : str(e),
-                    "msg": "server error" 
+                    "message": "server error." 
                 }
     # print("resource", resource)
 
@@ -247,6 +270,8 @@ def send_notification():
     # print(users.id)
     try:
         if users:
+            return 'User exist.'
+        else:
             code = generate_random_code()
             render_html = render_template('email.html', code=code)
             Code.createCode(to_email, code, "OTP")
@@ -254,8 +279,6 @@ def send_notification():
                 return jsonify({ 'code': 200, 'msg': 'Notification sent successfully'}), 200
             else:
                 return 'Failed to send notification.'
-        else:
-            return 'User does not exist'
     except Exception as e:
         return str(e)
 
