@@ -265,7 +265,6 @@ def forget_password():
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserByEmail(request_data.get("email"))
-    # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
     validate_list = ["password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
@@ -317,10 +316,8 @@ def forget_password():
 def send_notification():
     data = request.get_json()
     to_email = data['email']
-    # print(to_email)
     subject = 'Notification Subject'
     users = User.query.filter_by(email=to_email).first()
-    # print(users.id)
     try:
         if users:
             return 'User exist.'
