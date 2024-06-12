@@ -201,7 +201,7 @@ def add_user_registration():
         response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
         return response
   
-@app.route('/v1/password/<string:id>', methods=['PATCH'])
+@app.route('/v1/change/password/<string:id>', methods=['PATCH'])
 def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
@@ -259,7 +259,66 @@ def update_password(id):
 
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
-      
+
+@app.route('/v1/forget/password', methods=['PATCH'])
+def forget_password():
+    # Fetch the resource from your data source (e.g., database)
+    request_data = request.get_json()
+    resource = User.getUserByEmail(request_data.get("email"))
+    # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
+    validate_list = ["password1", "password2", "code", "email"]
+    validate_status = False
+    msg = {}
+    if resource is None:
+        return jsonify({ 'code': 404, 'error': 'Resource not found'}), 404
+    elif Code.getCodeByOTP(request_data.get('code'), request_data.get('email') ) is None:
+        return jsonify({ 'code': 403, 'error': 'Resource not found, check your email for the required code'}), 404
+    # Get the data from the request
+    data = request.get_json()
+    get_req_keys = None
+    get_req_keys_value_pair = None
+    # Update only the provided fields
+    for key, value in data.items():
+        if key in validate_list:
+            validate_status = True
+            if get_req_keys is None:
+                get_req_keys = key
+                get_req_keys_value_pair = f'"{key}": "{value}"'
+            else:
+                get_req_keys = f"{get_req_keys}, {key}"
+                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
+  
+    # print(json.dumps(get_req_keys_value_pair))
+    if validate_status is False:
+        msg = {
+            "code": 201,
+            "message": str(validate_list)
+        }
+    else:
+        try:
+            if User.update_user( id, request_data.get('password1'), resource):
+                msg = {
+                        "code": 200,
+                        "message": f"user detail(s) updated: {get_req_keys}",
+                        # "data": 'f{instance_dict}'
+                }
+            else:
+                msg = {
+                    "code": 301,
+                    "message": f"user detail(s) failed to updated.",
+                    # "data": 'f{instance_dict}'
+            }
+        except Exception as e:
+            msg = {
+                    "code": 501,
+                    "error :" : str(e),
+                    "message": "server error." 
+                }
+    # print("resource", resource)
+
+    response = Response( json.dumps(msg), status=200, mimetype='application/json')
+    return response  
+       
 @app.route('/v1/otp/email', methods=['POST'])
 def send_notification():
     data = request.get_json()
