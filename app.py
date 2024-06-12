@@ -286,9 +286,7 @@ def forget_password():
                 get_req_keys_value_pair = f'"{key}": "{value}"'
             else:
                 get_req_keys = f"{get_req_keys}, {key}"
-                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
-  
-    # print(json.dumps(get_req_keys_value_pair))
+                get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'  
     if validate_status is False:
         msg = {
             "code": 201,
@@ -300,13 +298,11 @@ def forget_password():
                 msg = {
                         "code": 200,
                         "message": f"user detail(s) updated: {get_req_keys}",
-                        # "data": 'f{instance_dict}'
                 }
             else:
                 msg = {
                     "code": 301,
                     "message": f"user detail(s) failed to updated.",
-                    # "data": 'f{instance_dict}'
             }
         except Exception as e:
             msg = {
@@ -314,8 +310,6 @@ def forget_password():
                     "error :" : str(e),
                     "message": "server error." 
                 }
-    # print("resource", resource)
-
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
        
