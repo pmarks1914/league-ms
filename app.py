@@ -201,7 +201,7 @@ def add_user_registration():
         response = Response(json.dumps(invalidUserOjectErrorMsg), status=200, mimetype='application/json')
         return response
   
-@app.route('/v1/password/<string:id>', methods=['PATCH'])
+@app.route('/v1/change/password/<string:id>', methods=['PATCH'])
 def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
