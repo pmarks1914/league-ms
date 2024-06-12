@@ -152,6 +152,11 @@ class User(db.Model):
         new_data_object = alchemy_to_json(new_data)
         return new_data_object
 
+    def getUserByEmail(email):
+        new_data = User.query.filter_by(email=email).first()
+        new_data_object = alchemy_to_json(new_data)
+        return new_data_object
+
     def getAllUsersByEmail(_email):
         joined_table_data = []
         # user_data = db.session.query(User).filter_by(email=_email).join(Business).all()
