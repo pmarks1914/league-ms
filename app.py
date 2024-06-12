@@ -205,7 +205,7 @@ def add_user_registration():
 def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
-    resource = User.getUserById(id, request_data.get('email'))
+    resource = User.getUserById(id)
     # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
     validate_list = ["id", "password1", "password2", "code", "email"]
     validate_status = False
