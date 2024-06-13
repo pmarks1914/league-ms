@@ -205,6 +205,12 @@ class User(db.Model):
         _user_data.password = hashlib.sha256((_value).encode()).hexdigest()
         db.session.commit()
         return True
+
+    def update_email_user( _email, _value, _user_data):
+        _user_data = User.query.filter_by(email=_email).first()
+        _user_data.password = hashlib.sha256((_value).encode()).hexdigest()
+        db.session.commit()
+        return True
         
     def delete_user(_id):
         is_successful = User.query.filter_by(id=_id).delete()
@@ -612,13 +618,18 @@ class Code(db.Model):
             pass
         return new_data
     
+    def delete_email_code(_code, _email):
+        is_successful = Code.query.filter_by(email=_email, code=_code).delete()
+        db.session.commit()
+        return bool(is_successful)
+    
     def delete_code(_id):
         is_successful = Code.query.filter_by(id=_id).delete()
         db.session.commit()
         return bool(is_successful)
 
     def getCodeByOTP(_otp, email):
-        print(">>>>", _otp, email)
+        # print(">>>>", _otp, email)
         if Code.query.filter_by(code=_otp).filter_by(account=email).first():
             return Code.query.filter_by(code=_otp).filter_by(account=email).first()
         else:
