@@ -619,7 +619,7 @@ class Code(db.Model):
         return new_data
     
     def delete_email_code(_code, _email):
-        is_successful = Code.query.filter_by(email=_email, code=_code).delete()
+        is_successful = Code.query.filter_by(account=_email, code=_code).delete()
         db.session.commit()
         return bool(is_successful)
     
