@@ -265,6 +265,7 @@ def forget_password():
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserByEmail(request_data.get("email"))
+    # print(resource)
     validate_list = ["password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
@@ -293,11 +294,12 @@ def forget_password():
         }
     else:
         try:
-            if User.update_user( id, request_data.get('password1'), resource):
+            if User.update_email_user( request_data.get("email"), request_data.get('password1'), resource):
                 msg = {
                         "code": 200,
                         "message": f"user detail(s) updated: {get_req_keys}",
                 }
+                Code.delete_email_code(request_data.get('code'), request_data.get('email') )
             else:
                 msg = {
                     "code": 301,
@@ -332,6 +334,21 @@ def send_notification():
     except Exception as e:
         return str(e)
 
+@app.route('/v1/send/otp/email', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    to_email = data['email']
+    subject = 'Notification Subject'
+    try:
+        code = generate_random_code()
+        render_html = render_template('email.html', code=code)
+        Code.createCode(to_email, code, "OTP")
+        if send_notification_email(to_email, subject, render_html):
+            return jsonify({ 'code': 200, 'msg': 'Notification sent successfully'}), 200
+        else:
+            return 'Failed to send notification.'
+    except Exception as e:
+        return str(e)
 @app.route('/')
 def index():
     return render_template('/fileUpload.html')
