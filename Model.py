@@ -707,7 +707,6 @@ class Fileupload(db.Model):
         return new_data
 
     def updateFile(file, description, business, id):
-        # print(">>>>>>>>", id, db.session.query(Fileupload).filter(id==id).first())
         new_data = Fileupload.query.filter_by(id=id).first()
         if file:
             new_data.file = file
