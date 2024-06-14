@@ -691,7 +691,6 @@ class Fileupload(db.Model):
 
     def createFile(_file, _description, _user_id, _school_id):
         _id = str(uuid.uuid4())
-        # print(_id, _file)
         new_data = Fileupload( file=_file, description=_description, id=_id )
         try:
             # Start a new session
