@@ -713,7 +713,6 @@ class Fileupload(db.Model):
         if description:
             new_data.description = description
         db.session.commit()
-        print(">>>", new_data.updated_on)
         # db.session.close()
         return alchemy_to_json(new_data)
 
