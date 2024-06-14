@@ -629,7 +629,6 @@ class Code(db.Model):
         return bool(is_successful)
 
     def getCodeByOTP(_otp, email):
-        # print(">>>>", _otp, email)
         if Code.query.filter_by(code=_otp).filter_by(account=email).first():
             return Code.query.filter_by(code=_otp).filter_by(account=email).first()
         else:
