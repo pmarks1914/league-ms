@@ -136,7 +136,6 @@ def add_user_registration():
     msg = {}
     code = request_data.get('otp')
     email = request_data.get('email')
-    # print("fff", request_data.get('otp'), request_data.get('email') )
     # 804233
     # code_data = Code.getCodeByOTP(request_data.get('otp'), request_data.get('email') )
     # print("code_data ", code_data)
