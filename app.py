@@ -56,9 +56,7 @@ def token_required(f):
 # @token_required
 def testd():
     try:
-        # print((request.json)['test'] )
-
-    # Extract query parameters
+        # Extract query parameters
         page = request.args.get('page', default=1, type=int)
         per_page = request.args.get('per_page', default=10, type=int)
         user = User.getAllUsers(page, per_page)
@@ -72,7 +70,6 @@ def testd():
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response    
     except Exception as e:
-        # print(e)
         return {"tes": str(e)}
 
 @app.route('/v1/callback/mfs', methods=['POST'])
@@ -88,7 +85,6 @@ def callbackfs():
         response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response 
     except Exception as e:
-        # print(e)
         return {"tes": str(e)}
 
 @app.route('/login', methods=['POST'])
@@ -111,7 +107,6 @@ def get_token():
             invalidUserOjectErrorMsg= {"code": 404, "User unavailable": 'Failed'}
             return Response(json.dumps(invalidUserOjectErrorMsg), status=404, mimetype='application/json')
     except Exception as e:
-            # print(e)
             invalidUserOjectErrorMsg= {"code": 500, "message": 'Failed', "error": str(e)}
             return Response(json.dumps(invalidUserOjectErrorMsg), status=500, mimetype='application/json')
 
