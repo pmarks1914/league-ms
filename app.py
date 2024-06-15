@@ -136,10 +136,6 @@ def add_user_registration():
     msg = {}
     code = request_data.get('otp')
     email = request_data.get('email')
-    # 804233
-    # code_data = Code.getCodeByOTP(request_data.get('otp'), request_data.get('email') )
-    # print("code_data ", code_data)
-    # print(code, email)
     if request_data.get('password1') == None or request_data.get('email') == None:
         msg = {
             "code": 305,
