@@ -629,7 +629,6 @@ class Code(db.Model):
         return bool(is_successful)
 
     def getCodeByOTP(_otp, email):
-        # print(">>>>", _otp, email)
         if Code.query.filter_by(code=_otp).filter_by(account=email).first():
             return Code.query.filter_by(code=_otp).filter_by(account=email).first()
         else:
@@ -692,7 +691,6 @@ class Fileupload(db.Model):
 
     def createFile(_file, _description, _user_id, _school_id):
         _id = str(uuid.uuid4())
-        # print(_id, _file)
         new_data = Fileupload( file=_file, description=_description, id=_id )
         try:
             # Start a new session
@@ -709,14 +707,12 @@ class Fileupload(db.Model):
         return new_data
 
     def updateFile(file, description, business, id):
-        # print(">>>>>>>>", id, db.session.query(Fileupload).filter(id==id).first())
         new_data = Fileupload.query.filter_by(id=id).first()
         if file:
             new_data.file = file
         if description:
             new_data.description = description
         db.session.commit()
-        print(">>>", new_data.updated_on)
         # db.session.close()
         return alchemy_to_json(new_data)
 
