@@ -241,7 +241,6 @@ def update_password(id):
                     "error :" : str(e),
                     "message": "server error." 
                 }
-    # print("resource", resource)
 
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
