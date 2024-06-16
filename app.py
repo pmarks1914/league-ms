@@ -216,7 +216,6 @@ def update_password(id):
                 get_req_keys = f"{get_req_keys}, {key}"
                 get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
   
-    # print(json.dumps(get_req_keys_value_pair))
     if validate_status is False:
         msg = {
             "code": 201,
