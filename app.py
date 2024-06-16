@@ -125,7 +125,6 @@ def user(id):
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         except Exception as e:
-            # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
@@ -156,8 +155,8 @@ def add_user_registration():
         _description = request_data.get('description')
         _role = request_data.get('role')
         _address = request_data.get('address')
-
-        print(User.query.filter_by(email=request_data.get('email')).first())
+        
+        # print(User.query.filter_by(email=request_data.get('email')).first())
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
