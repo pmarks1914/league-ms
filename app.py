@@ -389,7 +389,6 @@ def add_school():
         name = data.get('name')
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = School.create_school(user_id, name, description, expected_applicantion, user_email)
-        # print(post_data)
         if post_data:
             msg = {
                 "code": 200,
