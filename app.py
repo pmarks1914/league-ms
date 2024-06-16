@@ -155,7 +155,7 @@ def add_user_registration():
         _description = request_data.get('description')
         _role = request_data.get('role')
         _address = request_data.get('address')
-        
+
         # print(User.query.filter_by(email=request_data.get('email')).first())
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
@@ -166,7 +166,6 @@ def add_user_registration():
             return response
         else:
             User.createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address)
-            # print(json.dumps(user))
             invalidUserOjectErrorMsg = {
                 "code": 200,
                 "message": 'Successful',
