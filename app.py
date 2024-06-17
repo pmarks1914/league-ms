@@ -125,7 +125,6 @@ def user(id):
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         except Exception as e:
-            # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
     else:
         return {"code": 400, "message": 'Failed' }
@@ -157,7 +156,7 @@ def add_user_registration():
         _role = request_data.get('role')
         _address = request_data.get('address')
 
-        print(User.query.filter_by(email=request_data.get('email')).first())
+        # print(User.query.filter_by(email=request_data.get('email')).first())
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
@@ -167,7 +166,6 @@ def add_user_registration():
             return response
         else:
             User.createUser(_first_name, _last_name, _other_name, _password, _email, _description, _role, _address)
-            # print(json.dumps(user))
             invalidUserOjectErrorMsg = {
                 "code": 200,
                 "message": 'Successful',
@@ -196,7 +194,6 @@ def update_password(id):
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserById(id)
-    # print( Code.getCodeByOTP(request_data.get('code'), request_data.get('email')) )
     validate_list = ["id", "password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
@@ -219,7 +216,6 @@ def update_password(id):
                 get_req_keys = f"{get_req_keys}, {key}"
                 get_req_keys_value_pair = f'{get_req_keys_value_pair}, "{key}": "{value}"'
   
-    # print(json.dumps(get_req_keys_value_pair))
     if validate_status is False:
         msg = {
             "code": 201,
@@ -245,7 +241,6 @@ def update_password(id):
                     "error :" : str(e),
                     "message": "server error." 
                 }
-    # print("resource", resource)
 
     response = Response( json.dumps(msg), status=200, mimetype='application/json')
     return response  
@@ -255,7 +250,6 @@ def forget_password():
     # Fetch the resource from your data source (e.g., database)
     request_data = request.get_json()
     resource = User.getUserByEmail(request_data.get("email"))
-    # print(resource)
     validate_list = ["password1", "password2", "code", "email"]
     validate_status = False
     msg = {}
@@ -395,7 +389,6 @@ def add_school():
         name = data.get('name')
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = School.create_school(user_id, name, description, expected_applicantion, user_email)
-        # print(post_data)
         if post_data:
             msg = {
                 "code": 200,
