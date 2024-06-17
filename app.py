@@ -478,7 +478,6 @@ def student(id):
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         except Exception as e:
-            # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
     elif request.method == 'DELETE':
         try:
@@ -512,7 +511,6 @@ def add_student():
         description = data.get('description')
         {k: v for k, v in data.items() if k not in ['description']}
         student = Student.create_student(user_id, description, user_email)
-        # print(student)
         if student:
             msg = {
                 "code": 200,
