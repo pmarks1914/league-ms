@@ -597,7 +597,6 @@ def application(id):
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         except Exception as e:
-            # print(e)
             return {"code": 203, "message": 'Failed', "error": str(e)}
     elif request.method == 'DELETE':
         try:
