@@ -116,7 +116,6 @@ def user(id):
     if request.method == 'GET':
         try:
             request_data = User.getUserById(id)
-            # print("mfs callback >>> ", request_data )
             msg = {
                 "code": 200,
                 "message": 'Successful',
