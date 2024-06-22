@@ -615,6 +615,11 @@ def application(id):
     else:
         return {"code": 400, "message": 'Failed' }
 
+@app.route('/application-by-student/<string:id>', methods=['GET'])
+@token_required
+def applicationByStudent(id):
+    pass
+
 @app.route('/application', methods=['POST'])
 def add_application():
     token = request.headers.get('Authorization')
