@@ -620,7 +620,7 @@ def application(id):
 def applicationByStudent(id):
     if request.method == 'GET':
         try:
-            request_data = Application.get_application_by_student_id(id)
+            request_data = Application.get(id)
             msg = {
                 "code": 200,
                 "message": 'Successful',
@@ -662,7 +662,7 @@ def add_application():
         description = data.get('description')
         programme_id = data.get('programme_id')
         student_id = Student.get_user_by_id(user_id)
-        student_id = student_id['id'] or None
+        student_id = student_id.id or None
 
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = Application.create_application(description, programme_id, student_id, user_email)
