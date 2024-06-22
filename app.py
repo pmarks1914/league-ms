@@ -618,7 +618,28 @@ def application(id):
 @app.route('/application-by-student/<string:id>', methods=['GET'])
 @token_required
 def applicationByStudent(id):
-    pass
+    if request.method == 'GET':
+        try:
+            pass
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Application.delete_application(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
 
 @app.route('/application', methods=['POST'])
 def add_application():
