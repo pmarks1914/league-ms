@@ -460,7 +460,7 @@ class Application(db.Model):
     # get_application_by_student_id
     def get_application_by_student_id(student_id):
         try:
-            application = db.session.query(Application).filter(Application.id == student_id).one_or_none() or []
+            application = db.session.query(Application).filter(Application.student_id == student_id).one_or_none() or []
             if application:
                 logger.info(f"Application retrieved with ID: {student_id}")
             else:
