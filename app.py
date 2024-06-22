@@ -620,7 +620,7 @@ def application(id):
 def applicationByStudent(id):
     if request.method == 'GET':
         try:
-            request_data = Application.get_application_by_id(id)
+            request_data = Application.get_application_by_student_id(id)
             msg = {
                 "code": 200,
                 "message": 'Successful',
