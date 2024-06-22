@@ -457,6 +457,19 @@ class Application(db.Model):
             logger.error(f"Error retrieving application by ID: {e}")
             raise
 
+    # get_application_by_student_id
+    def get_application_by_student_id(student_id):
+        try:
+            application = db.session.query(Application).filter(Application.id == student_id).one_or_none() or []
+            if application:
+                logger.info(f"Application retrieved with ID: {student_id}")
+            else:
+                logger.warning(f"No application found with ID: {student_id}")
+            return application
+        except Exception as e:
+            logger.error(f"Error retrieving application by ID: {e}")
+            raise
+
     def get_all_applications():
         try:
             applications = db.session.query(Application).all()
