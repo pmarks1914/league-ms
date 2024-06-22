@@ -620,7 +620,14 @@ def application(id):
 def applicationByStudent(id):
     if request.method == 'GET':
         try:
-            pass
+            request_data = Application.get_application_by_id(id)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
         except Exception as e:
             return {"code": 203, "message": 'Failed', "error": str(e)}
     elif request.method == 'DELETE':
