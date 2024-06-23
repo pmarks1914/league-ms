@@ -432,6 +432,19 @@ class Application(db.Model):
     student = db.relationship('Student', back_populates='application', lazy='select')
     programme_id = db.Column(db.String(36), db.ForeignKey('programme.id'))
 
+    def application_json(self):
+        return {
+            'id': self.id,
+            'description': self.description,
+            'student_id': self.student_id,
+            'programme_id': self.programme_id,
+            'created_by': self.created_by,
+            'updated_by': self.updated_by,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            'student': self.student.to_dict() if self.student else None,
+            'programme': self.programme.to_dict() if self.programme else None }
+
     def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
@@ -457,18 +470,24 @@ class Application(db.Model):
             logger.error(f"Error retrieving application by ID: {e}")
             raise
 
-    # get_application_by_student_id
-    def get_application_by_student_id(student_id):
-        try:
-            application = db.session.query(Application).filter(Application.student_id == student_id).one_or_none() or []
-            if application:
-                logger.info(f"Application retrieved with ID: {student_id}")
-            else:
-                logger.warning(f"No application found with ID: {student_id}")
-            return application
-        except Exception as e:
-            logger.error(f"Error retrieving application by ID: {e}")
-            raise
+    # get application by student id
+    def get_application_by_student_id(student_id, page, per_page): 
+        pagination = Application.query.filter_by(student_id=student_id).paginate(page=page, per_page=per_page, error_out=False)
+        # Extract the items list for the current page
+        new_data = pagination.items
+        # Render nested objects
+        pagination_data = [Application.application_json(appli) for appli in new_data]
+        # Prepare pagination information to be returned along with the data
+        paging_data = {
+            'total': pagination.total,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': pagination.pages
+        }
+        return {
+            'data': pagination_data,
+            'pagination': paging_data
+        }
 
     def get_all_applications():
         try:
