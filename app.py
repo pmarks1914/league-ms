@@ -618,13 +618,17 @@ def application(id):
 @app.route('/application-by-student/<string:id>', methods=['GET'])
 @token_required
 def applicationByStudent(id):
+    # Extract query parameters
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
     if request.method == 'GET':
         try:
-            request_data = Application.get_application_by_id(id)
+            request_data = Application.get_application_by_student_id(id, page, per_page)
             msg = {
                 "code": 200,
                 "message": 'Successful',
-                "data": request_data
+                "data": request_data['data'],
+                "pagination": request_data['pagination']
             }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
@@ -662,7 +666,7 @@ def add_application():
         description = data.get('description')
         programme_id = data.get('programme_id')
         student_id = Student.get_user_by_id(user_id)
-        student_id = student_id['id'] or None
+        student_id = student_id.id or None
 
         {k: v for k, v in data.items() if k not in ['name', 'expected_applicantion', 'description']}
         post_data = Application.create_application(description, programme_id, student_id, user_email)

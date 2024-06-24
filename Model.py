@@ -92,31 +92,24 @@ class User(db.Model):
                 'id': self.id,
                 'email': self.email,
                 'role': self.role,
-                'phone': self.phone, 
                 'first_name': self.first_name, 
                 'last_name': self.last_name, 
                 'other_name': self.other_name, 
-                'logo': self.logo, 
-                'account_type': self.account_type, 
+                # 'logo': self.logo, 
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
-                'business_id': self.business_id, 
-                'created_on': self.created_on,
-                'updated_on': self.updated_on }
+                'created_on': str(self.created_on),
+                'updated_on': str(self.updated_on) }
     def _repr_(self):
         return json.dumps({
                 'id': self.id,
                 'email': self.email,
                 'role': self.role,
-                'phone': self.phone, 
                 'first_name': self.first_name, 
                 'last_name': self.last_name, 
                 'other_name': self.other_name, 
-                'logo': self.logo, 
-                'account_type': self.account_type, 
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
-                'business_id': self.business_id, 
                 'created_on': self.created_on,
                 'updated_on': self.updated_on })
     def username_password_match(_username, _password ):
@@ -334,8 +327,9 @@ class Student(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'description': self.description,
-            'created_on': self.created_on,
-            'updated_on': self.updated_on
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            "user": self.user.json() if self.user else None,
         }
 
     def create_student(user_id, description, user_email):
@@ -432,6 +426,19 @@ class Application(db.Model):
     student = db.relationship('Student', back_populates='application', lazy='select')
     programme_id = db.Column(db.String(36), db.ForeignKey('programme.id'))
 
+    def application_json(self):
+        return {
+            'id': self.id,
+            'description': self.description,
+            'student_id': self.student_id,
+            'programme_id': self.programme_id,
+            'created_by': self.created_by,
+            'updated_by': self.updated_by,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            'student': self.student.to_dict() if self.student else None,
+            'programme': self.programme.to_dict() if self.programme else None }
+
     def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
@@ -456,6 +463,25 @@ class Application(db.Model):
         except Exception as e:
             logger.error(f"Error retrieving application by ID: {e}")
             raise
+
+    # get application by student id
+    def get_application_by_student_id(student_id, page, per_page): 
+        pagination = Application.query.filter_by(student_id=student_id).paginate(page=page, per_page=per_page, error_out=False)
+        # Extract the items list for the current page
+        new_data = pagination.items
+        # Render nested objects
+        pagination_data = [Application.application_json(appli) for appli in new_data]
+        # Prepare pagination information to be returned along with the data
+        paging_data = {
+            'total': pagination.total,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': pagination.pages
+        }
+        return {
+            'data': pagination_data,
+            'pagination': paging_data
+        }
 
     def get_all_applications():
         try:
@@ -517,6 +543,15 @@ class Programme(db.Model):
     school = db.relationship('School', back_populates='programme', lazy='select')
     school = db.relationship('School', back_populates='programme', lazy='select')
     application = db.relationship('Application', back_populates='programme', lazy='select')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+        }
 
     def create_programme(school_id, name, description, user_email):
         _id = str(uuid.uuid4())
