@@ -155,7 +155,6 @@ def add_user_registration():
         _role = request_data.get('role')
         _address = request_data.get('address')
 
-        # print(User.query.filter_by(email=request_data.get('email')).first())
         if User.query.filter_by(email=request_data.get('email')).first() is not None:
             msg = {
                 "code": 202,
