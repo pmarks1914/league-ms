@@ -150,7 +150,6 @@ def add_user_registration():
         _last_name = request_data.get('last_name')
         _other_name = request_data.get('other_name')
         _email = request_data.get('email')
-        # _phone = request_data.get('phone')
         _description = request_data.get('description')
         _role = request_data.get('role')
         _address = request_data.get('address')
