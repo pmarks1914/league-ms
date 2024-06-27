@@ -379,7 +379,6 @@ def add_school():
         data = request.get_json()
         user_id = token_data['id'] or None
         user_data = User.getUserById(user_id)
-        # print("user_data ", user_data['file'] )
         user_email = user_data['email'] or None
         description = data.get('description')
         expected_applicantion = data.get('expected_applicantion')
