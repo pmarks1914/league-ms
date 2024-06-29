@@ -254,6 +254,18 @@ class School(db.Model):
             logger.error(f"Error creating school: {e}")
             raise
 
+    def get_school_by_two():
+        try:
+            schools = db.session.query(School).order_by(func.random()).limit(2).all()
+            if schools:
+                logger.info(f"Schools retrieved: {schools}")
+            else:
+                logger.warning(f"No schools found")
+            return schools
+        except Exception as e:
+            logger.error(f"Error retrieving schools: {e}")
+        raise
+
 
     def get_school_by_id(school_id):
         try:
