@@ -227,6 +227,16 @@ class School(db.Model):
     file = db.relationship('Fileupload', back_populates='school', lazy='select')
     programme = db.relationship('Programme', back_populates='school')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'expected_applicantion': self.expected_applicantion,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            # "user": self.user.json() if self.user else None,
+        }
 
     def create_school(user_id, name, description, expected_applicantion, user_email):
         _id = str(uuid.uuid4())
@@ -551,6 +561,7 @@ class Programme(db.Model):
             'description': self.description,
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on),
+            "school": self.school.to_dict() if self.school else None,
         }
 
     def create_programme(school_id, name, description, user_email):
