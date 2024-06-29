@@ -334,7 +334,24 @@ def send_otp():
 def index():
     return render_template('/fileUpload.html')
 
-
+@app.route('/schools', methods=['GET'])
+@token_required
+def school_two():
+    if request.method == 'GET':
+        try:
+            request_data = School.get_school_by_two()
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
 
 @app.route('/school/<string:id>', methods=['GET', 'DELETE'])
 @token_required

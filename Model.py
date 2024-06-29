@@ -12,6 +12,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import defer, undefer, relationship, load_only, sessionmaker
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import ForeignKey
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.inspection import inspect
+from sqlalchemy.sql.expression import func
 from Helper.helper import generate_transaction_referance
 from Settings import app
 from datetime import datetime, timedelta
@@ -19,10 +23,8 @@ from datetime import datetime, timedelta
 from flask_migrate import Migrate
 import json
 # from sendEmail import Email 
-from sqlalchemy import ForeignKey
 import uuid
-from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.inspection import inspect
+
 import sys
 
 
@@ -251,6 +253,7 @@ class School(db.Model):
             db.session.rollback()
             logger.error(f"Error creating school: {e}")
             raise
+
 
     def get_school_by_id(school_id):
         try:
