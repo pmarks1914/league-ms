@@ -86,10 +86,9 @@ class User(db.Model):
     address = db.Column(db.String(50), nullable=True)
     country = db.Column(db.String(50), nullable=True)
     city = db.Column(db.String(50), nullable=True)
-    street_name = db.Column(db.String(50), nullable=True)
+    town = db.Column(db.String(50), nullable=True)
     lon = db.Column(db.String(25), nullable=True)
     lat = db.Column(db.String(25), nullable=True)
-
     dob = db.Column(db.DateTime(), nullable=True)
     phone = db.Column(db.String(15), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
