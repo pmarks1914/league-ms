@@ -334,7 +334,89 @@ def send_otp():
 def index():
     return render_template('/fileUpload.html')
 
+@app.route('/user/any', methods=['PATCH'])
+def update_any_user():
+    token = request.headers.get('Authorization')
+    msg = {}
+    try:
+        token = token.split(" ")[1]        
+        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+        data = request.get_json()
+        user_id = token_data['id'] or None
+        user_data = User.getUserById(user_id)
+        user_email = user_data['email'] or None
+        # Extracting the fields to be updated from the request data
+        update_fields = {key: value for key, value in data.items()}
+        # update_fields = {key: value for key, value in data.items() if key in ['first_name', 'last_name', 'other_name', 'email','dob', 'address', 'country', 'city', 'street_name', 'lon', 'lat' ]}
+        post_data = User.update_user_any(user_id, user_email, **update_fields)
+        if post_data:
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": {
+                    'user_id': user_id,
+                    'updated_by_id': user_email,
+                    'updated_by': user_email
+                }
+            }
+        else:
+            msg = {
+                "code": 304,
+                "message": 'Failed',
+            }
+        return Response( json.dumps(msg), status=200, mimetype='application/json')
+    except Exception as e:
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "error": str(e)
+        }
+        return Response( json.dumps(msg), status=500, mimetype='application/json')
 
+@app.route('/user', methods=['GET'])
+def update_any_user_get():
+    token = request.headers.get('Authorization')
+    msg = {}
+    token = token.split(" ")[1]        
+    token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+    user_id = token_data['id'] or None
+    try:
+        match = User.getUserById(user_id)
+        if match != None and match != False:
+            expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
+            token = jwt.encode({'exp': expiration_date, 'id': match['id']}, app.config['SECRET_KEY'], algorithm='HS256')
+            if match['role'] == 'STUDENT':
+                student_id = Student.get_user_by_id(match['id']) or None
+                student_id = student_id.id or None
+            msg = { "user": match | {"student_id":  student_id} }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        else:
+            invalidUserOjectErrorMsg= {"code": 404, "User unavailable": 'Failed'}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=404, mimetype='application/json')
+    except Exception as e:
+            invalidUserOjectErrorMsg= {"code": 500, "message": 'Failed', "error": str(e)}
+            return Response(json.dumps(invalidUserOjectErrorMsg), status=500, mimetype='application/json')
+
+
+@app.route('/schools', methods=['GET'])
+@token_required
+def school_two():
+    if request.method == 'GET':
+        try:
+            request_data = School.get_school_by_two()
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+ 
 
 @app.route('/school/<string:id>', methods=['GET', 'DELETE'])
 @token_required

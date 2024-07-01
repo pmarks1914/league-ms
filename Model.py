@@ -12,6 +12,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import defer, undefer, relationship, load_only, sessionmaker
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import ForeignKey
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.inspection import inspect
+from sqlalchemy.sql.expression import func
 from Helper.helper import generate_transaction_referance
 from Settings import app
 from datetime import datetime, timedelta
@@ -19,10 +23,8 @@ from datetime import datetime, timedelta
 from flask_migrate import Migrate
 import json
 # from sendEmail import Email 
-from sqlalchemy import ForeignKey
 import uuid
-from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.inspection import inspect
+
 import sys
 
 
@@ -81,6 +83,14 @@ class User(db.Model):
     active_status = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
+    address = db.Column(db.String(50), nullable=True)
+    country = db.Column(db.String(50), nullable=True)
+    city = db.Column(db.String(50), nullable=True)
+    town = db.Column(db.String(50), nullable=True)
+    lon = db.Column(db.String(25), nullable=True)
+    lat = db.Column(db.String(25), nullable=True)
+    dob = db.Column(db.DateTime(), nullable=True)
+    phone = db.Column(db.String(15), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     school = db.relationship('School',  back_populates='user', lazy='joined')
@@ -204,7 +214,25 @@ class User(db.Model):
         _user_data.password = hashlib.sha256((_value).encode()).hexdigest()
         db.session.commit()
         return True
-        
+
+    def update_user_any(user_id, updated_by, **kwargs):
+        try:
+            user = db.session.query(User).filter(User.id == user_id).one_or_none() or []
+            if user:
+                for key, value in kwargs.items():
+                    setattr(user, key, value)
+                user.updated_on = datetime.utcnow()
+                user.updated_by = updated_by
+                db.session.commit()
+                logger.info(f"user updated with ID: {user.id}")
+            else:
+                logger.warning(f"No user found with ID: {user_id}")
+            return user.json()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating user: {e}")
+            raise
+    
     def delete_user(_id):
         is_successful = User.query.filter_by(id=_id).delete()
         db.session.commit()
@@ -227,6 +255,29 @@ class School(db.Model):
     file = db.relationship('Fileupload', back_populates='school', lazy='select')
     programme = db.relationship('Programme', back_populates='school')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'expected_applicantion': self.expected_applicantion,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            # "user": self.user.json() if self.user else None,
+        }
+    
+    def to_dict_2(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'expected_applicantion': self.expected_applicantion,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            # "user": self.user.json() if self.user else None,
+            'programme': [programme.to_dict_2() for programme in self.programme]
+
+        }
 
     def create_school(user_id, name, description, expected_applicantion, user_email):
         _id = str(uuid.uuid4())
@@ -241,6 +292,24 @@ class School(db.Model):
             db.session.rollback()
             logger.error(f"Error creating school: {e}")
             raise
+
+    def get_school_by_two():
+        joined_table_data = []
+        try:
+            school = School.query.order_by(func.random()).all() 
+            # school = School.query.order_by(func.random()).limit(2).all() 
+            # Render nested objects
+            if school:
+                logger.info(f"Schools retrieved")
+                for item in school:
+                    joined_table_data.append(item.to_dict_2())
+                # Convert the result to a JSON-formatted string
+            else:
+                logger.warning(f"No schools found")
+            return joined_table_data
+        except Exception as e:
+            logger.error(f"Error retrieving schools: {e}")
+            return str(e)
 
     def get_school_by_id(school_id):
         try:
@@ -545,6 +614,15 @@ class Programme(db.Model):
     application = db.relationship('Application', back_populates='programme', lazy='select')
 
     def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on),
+            "school": self.school.to_dict() if self.school else None,
+        }
+    def to_dict_2(self):
         return {
             'id': self.id,
             'name': self.name,
