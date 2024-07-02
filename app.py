@@ -4,7 +4,7 @@ import uuid
 from flask import Flask, jsonify, request, Response, render_template
 import requests, json
 from Helper.helper import generate_random_code
-from fileManager.fileManager import fileUpload
+from fileManager.fileManager import fileUploadManager
 #import geocoder
 from Model import Application, Programme, School, Student, User, Code, db, Fileupload
 from Notification.Email.sendEmail import send_notification_email
@@ -949,7 +949,7 @@ def upload():
         "message": 'Failed',
     }
     if request.method == 'POST':
-        if fileUpload(request):
+        if fileUploadManager(request):
             msg = {
                 "code": 200,
                 "message": 'Successful',
@@ -969,7 +969,7 @@ def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
     if request.method == 'PATCH':
-        return fileUpload(request, id)
+        return fileUploadManager(request, id)
     msg = {
         "code": 404,
         "message": 'Failed',
