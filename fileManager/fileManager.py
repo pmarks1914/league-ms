@@ -6,9 +6,13 @@ import os
 def fileUploadManager(request, *args):
     if 'cert' not in request.files:
         return 'No cert part in the request'
+
     file = request.files['cert']
+    print(request.get_json())
+
     if file.filename == '':
         return 'No selected file'
+
     try:
         if request.method == 'POST':
             data_object = Fileupload.createFile(file.filename, file.filename, 'test')
