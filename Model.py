@@ -802,23 +802,21 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _user_id, _school_id):
+    def createFile(_file, _description, _user_id):
         _id = str(uuid.uuid4())
         new_data = Fileupload( file=_file, description=_description, id=_id )
         try:
             # Start a new session
-            with app.app_context():
-                db.session.add(new_data)
-                db.session.commit()
-                # Refresh the instance to make sure attributes are up-to-date
-                db.session.refresh(new_data)
+            db.session.add(new_data)
+            db.session.commit()
+            return new_data
         except Exception as e:
             db.session.rollback()  # Rollback the transaction in case of an error
-            # return str(e)
+            print(f"Error:: {e}")
         finally:
-            db.session.close()
-        return new_data
-
+            # db.session.close()
+            pass
+ 
     def updateFile(file, description, business, id):
         new_data = Fileupload.query.filter_by(id=id).first()
         if file:

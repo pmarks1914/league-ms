@@ -949,10 +949,12 @@ def upload():
         "message": 'Failed',
     }
     if request.method == 'POST':
-        if fileUploadManager(request):
+        data_source = fileUploadManager(request)
+        if data_source:
             msg = {
                 "code": 200,
                 "message": 'Successful',
+                "other": data_source
             }
             return Response( json.dumps(msg), status=200, mimetype='application/json')
         return Response( json.dumps(msg), status=200, mimetype='application/json')

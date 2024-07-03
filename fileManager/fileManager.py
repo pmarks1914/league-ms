@@ -11,7 +11,7 @@ def fileUploadManager(request, *args):
         return 'No selected file'
     try:
         if request.method == 'POST':
-            print(request.files)
+            # print(request.files)
             data_object = Fileupload.createFile(file.filename, file.filename, 'test')
             print("data_object ", data_object.id)
             # save it to the folder
@@ -22,7 +22,7 @@ def fileUploadManager(request, *args):
             new_filename = data_object.id + '.' + file_type.split('/')[1]
             file_path = os.path.join(upload_folder, new_filename)
             os.rename(os.path.join(upload_folder, file.filename), file_path)
-            return {'message': 'File uploaded successfull', 'statuscode': 200}
+            return {'message': 'File uploaded successfull'}
 
         if request.method == 'PATCH':
             for arg in args:
@@ -36,7 +36,6 @@ def fileUploadManager(request, *args):
                 file_path = os.path.join(upload_folder, new_filename)
                 os.rename(os.path.join(upload_folder, file.filename), file_path)
                 file_data['message'] = 'File uploaded successfully'
-                file_data['statuscode'] = 200
                 return file_data
 
     except Exception as e:
