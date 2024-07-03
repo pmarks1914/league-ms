@@ -109,7 +109,8 @@ class User(db.Model):
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
                 'created_on': str(self.created_on),
-                'updated_on': str(self.updated_on) }
+                'updated_on': str(self.updated_on),
+                "file": self.file.to_dict() if self.file else None, }
     def _repr_(self):
         return json.dumps({
                 'id': self.id,
@@ -783,6 +784,16 @@ class Fileupload(db.Model):
     school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
     school = db.relationship('School', back_populates='file', lazy='select')
     
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.file,
+            'description': self.type,
+            'description': self.description,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on)
+        }
+
     # get file by business
     def getFileById(id, page=1, per_page=10): 
         pagination = Fileupload.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
@@ -802,9 +813,9 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _user_id):
+    def createFile(_file, _description, _file_type):
         _id = str(uuid.uuid4())
-        new_data = Fileupload( file=_file, description=_description, id=_id )
+        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type )
         try:
             # Start a new session
             db.session.add(new_data)
