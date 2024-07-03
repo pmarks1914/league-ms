@@ -3,7 +3,7 @@ from Model import Fileupload
 import os
 
 
-def fileUploadManager(request, *args):
+def fileUploadManager(request, user_id, *args):
     if 'cert' not in request.files:
         return 'No cert part in the request'
     file = request.files['cert']
@@ -15,7 +15,7 @@ def fileUploadManager(request, *args):
             file_type = "Certificate"
             if str(request.form.get('type')) == "2":
                 file_type = "Transcript"
-            data_object = Fileupload.createFile(file.filename, file.filename, file_type)
+            data_object = Fileupload.createFile(file.filename, file.filename, file_type, user_id)
             # print("data_object ", data_object.id)
             # save it to the folder
             upload_folder = 'static/uploads'

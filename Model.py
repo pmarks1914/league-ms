@@ -813,9 +813,9 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _file_type):
+    def createFile(_file, _description, _file_type, _user_id):
         _id = str(uuid.uuid4())
-        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type )
+        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, user_id=_user_id)
         try:
             # Start a new session
             db.session.add(new_data)

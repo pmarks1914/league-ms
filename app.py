@@ -52,6 +52,14 @@ def token_required(f):
             return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
 
+def return_user_id(request):
+    token = request.headers.get('Authorization')
+    msg = {}
+    token = token.split(" ")[1]        
+    token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+    user_id = token_data['id'] or None
+    return user_id
+
 @app.route('/test', methods=['GET'])
 # @token_required
 def testd():
@@ -375,11 +383,8 @@ def update_any_user():
 
 @app.route('/user', methods=['GET'])
 def update_any_user_get():
-    token = request.headers.get('Authorization')
     msg = {}
-    token = token.split(" ")[1]        
-    token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
-    user_id = token_data['id'] or None
+    user_id = return_user_id(request)
     try:
         match = User.getUserById(user_id)
         if match != None and match != False:
@@ -453,13 +458,10 @@ def school(id):
  
 @app.route('/school', methods=['POST'])
 def add_school():
-    token = request.headers.get('Authorization')
     msg = {}
-    try:
-        token = token.split(" ")[1]        
-        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
-        data = request.get_json()
-        user_id = token_data['id'] or None
+    try:    
+        data = request.get_json()        
+        user_id = return_user_id(request)
         user_data = User.getUserById(user_id)
         user_email = user_data['email'] or None
         description = data.get('description')
@@ -943,13 +945,15 @@ def update_programme(id):
 
 
 @app.route('/upload', methods=['POST'])
+@token_required
 def upload():
+    user_id = return_user_id(request)
     msg = {
         "code": 403,
         "message": 'Failed',
     }
     if request.method == 'POST':
-        data_source = fileUploadManager(request)
+        data_source = fileUploadManager(request, user_id)
         if data_source:
             msg = {
                 "code": 200,
@@ -967,6 +971,7 @@ def upload():
 
 
 @app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
+@token_required
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
@@ -980,6 +985,7 @@ def uploadUpdate(id):
 
 
 @app.route('/file/delete/<string:id>', methods=['DELETE'])
+@token_required
 def fileDelete(id):
     msg = {
         "code": 403,
