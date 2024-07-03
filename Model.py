@@ -774,6 +774,7 @@ class Fileupload(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
+    format = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -788,7 +789,8 @@ class Fileupload(db.Model):
         return {
             'id': self.id,
             'name': self.file,
-            'description': self.type,
+            'type': self.type,
+            'format': self.format,
             'description': self.description,
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on)
@@ -813,9 +815,9 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _file_type, _user_id):
+    def createFile(_file, _description, _file_type, _doc_format, _user_id):
         _id = str(uuid.uuid4())
-        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, user_id=_user_id)
+        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, format=_doc_format, user_id=_user_id)
         try:
             # Start a new session
             db.session.add(new_data)

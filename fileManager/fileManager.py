@@ -11,11 +11,12 @@ def fileUploadManager(request, user_id, *args):
         return 'No selected file'
     try:
         if request.method == 'POST':
-            # print(request.form.get('name'))
-            file_type = "Certificate"
+            # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
+            doc_type = "Certificate"
             if str(request.form.get('type')) == "2":
-                file_type = "Transcript"
-            data_object = Fileupload.createFile(file.filename, file.filename, file_type, user_id)
+                doc_type = "Transcript"
+            doc_format = file.content_type.split('/')[1]
+            data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
             # print("data_object ", data_object.id)
             # save it to the folder
             upload_folder = 'static/uploads'
