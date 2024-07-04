@@ -1,7 +1,7 @@
 from crypt import methods
 import re
 import uuid
-from flask import Flask, jsonify, request, Response, render_template
+from flask import Flask, jsonify, request, Response, render_template, url_for
 import requests, json
 from Helper.helper import generate_random_code
 from fileManager.fileManager import fileUploadManager
@@ -338,9 +338,14 @@ def send_otp():
             return 'Failed to send notification.'
     except Exception as e:
         return str(e)
-@app.route('/')
+@app.route('/static/uploads')
 def index():
     return render_template('/fileUpload.html')
+
+# @app.route('/static/<string:file>')
+# def upload_index_file(file):
+#     file_url = url_for('static', filename=f'uploads/{file}')
+#     return f'The URL for the file is: {file_url}'
 
 @app.route('/user/any', methods=['PATCH'])
 def update_any_user():
@@ -971,7 +976,7 @@ def upload():
 
 
 @app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
-@token_required
+# @token_required
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
@@ -982,7 +987,6 @@ def uploadUpdate(id):
         "message": 'Failed',
     }
     return Response( json.dumps(msg), status=404, mimetype='application/json')
-
 
 @app.route('/file/delete/<string:id>', methods=['DELETE'])
 @token_required

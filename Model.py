@@ -7,6 +7,7 @@ from locale import currency
 import re
 from textwrap import indent
 from time import timezone
+from flask import request
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import defer, undefer, relationship, load_only, sessionmaker
@@ -24,13 +25,13 @@ from flask_migrate import Migrate
 import json
 # from sendEmail import Email 
 import uuid
-
 import sys
+from dotenv import dotenv_values
 
-
+get_env = dotenv_values(".env") 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
+ 
 list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
 
@@ -110,7 +111,8 @@ class User(db.Model):
                 'updated_by': self.updated_by,
                 'created_on': str(self.created_on),
                 'updated_on': str(self.updated_on),
-                "file": self.file.to_dict() if self.file else None, }
+                'file': [file.to_dict() for file in self.file]
+                }
     def _repr_(self):
         return json.dumps({
                 'id': self.id,
@@ -153,7 +155,7 @@ class User(db.Model):
 
     def getUserById(id):
         new_data = User.query.filter_by(id=id).first()
-        new_data_object = alchemy_to_json(new_data)
+        new_data_object = new_data.json()
         return new_data_object
 
     def getUserByEmail(email):
@@ -791,6 +793,7 @@ class Fileupload(db.Model):
             'name': self.file,
             'type': self.type,
             'format': self.format,
+            'url': get_env['FILE_STATIC_UPLOAD_PATH'] + str(self.id) + '.' + self.format,
             'description': self.description,
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on)
