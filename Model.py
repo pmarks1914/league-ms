@@ -308,21 +308,17 @@ class School(db.Model):
 
     def get_school_by_two():
         joined_table_data = []
-        try:
-            school = School.query.order_by(func.random()).all() 
-            # school = School.query.order_by(func.random()).limit(2).all() 
-            # Render nested objects
-            if school:
-                logger.info(f"Schools retrieved")
-                for item in school:
-                    joined_table_data.append(item.to_dict_2())
-                # Convert the result to a JSON-formatted string
-            else:
-                logger.warning(f"No schools found")
-            return joined_table_data
-        except Exception as e:
-            logger.error(f"Error retrieving schools: {e}")
-            return str(e)
+        school = School.query.order_by(func.random()).all() 
+        # school = School.query.order_by(func.random()).limit(2).all() 
+        # Render nested objects
+        if school:
+            logger.info(f"Schools retrieved")
+            for item in school:
+                joined_table_data.append(item.to_dict_2())
+            # Convert the result to a JSON-formatted string
+        else:
+            logger.warning(f"No schools found")
+        return joined_table_data
 
     def get_school_by_id(school_id):
         try:
@@ -550,6 +546,25 @@ class Application(db.Model):
         except Exception as e:
             logger.error(f"Error retrieving application by ID: {e}")
             raise
+    
+    # get application by student id for last five
+    def get_application_by_student_id_last_five(student_id, page, per_page): 
+        pagination = Application.query.filter_by(student_id=student_id).order_by(Application.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        # Extract the items list for the current page
+        new_data = pagination.items
+        # Render nested objects
+        pagination_data = [Application.application_json(appli) for appli in new_data]
+        # Prepare pagination information to be returned along with the data
+        paging_data = {
+            'total': pagination.total,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': pagination.pages
+        }
+        return {
+            'data': pagination_data,
+            'pagination': paging_data
+        }
 
     # get application by student id
     def get_application_by_student_id(student_id, page, per_page): 
@@ -816,6 +831,9 @@ class Fileupload(db.Model):
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on)
         }
+
+    def countFileById(user_id):
+        return Fileupload.query.filter_by(user_id=user_id).count()
 
     # get file by business
     def getFileById(id, page=1, per_page=10): 

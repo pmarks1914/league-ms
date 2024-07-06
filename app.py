@@ -112,7 +112,8 @@ def get_token():
                 count_stats = {
                     "programme": Programme.countProgramme(),
                     "school": School.countSchool(),
-                    "application": Application.countApplicationById(student_id)
+                    "application": Application.countApplicationById(student_id),
+                    "file": Fileupload.countFileById(match['id'])
                 }
 
             msg = { "user": match | {"student_id":  student_id, "count_stats": count_stats}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
@@ -396,6 +397,7 @@ def update_any_user():
 @app.route('/user', methods=['GET'])
 def update_any_user_get():
     msg = {}
+    count_stats = None
     user_id = return_user_id(request)
     try:
         match = User.getUserById(user_id)
@@ -405,7 +407,15 @@ def update_any_user_get():
             if match['role'] == 'STUDENT':
                 student_id = Student.get_user_by_id(match['id']) or None
                 student_id = student_id.id or None
-            msg = { "user": match | {"student_id":  student_id} }
+                student_id = Student.get_user_by_id(match['id']) or None
+                student_id = student_id.id or None
+                count_stats = {
+                    "programme": Programme.countProgramme(),
+                    "school": School.countSchool(),
+                    "application": Application.countApplicationById(student_id),
+                    "file": Fileupload.countFileById(match['id'])
+                }
+            msg = { "user": match | {"student_id":  student_id, "count_stats": count_stats} }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         else:
@@ -717,6 +727,43 @@ def applicationByStudent(id):
     if request.method == 'GET':
         try:
             request_data = Application.get_application_by_student_id(id, page, per_page)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data['data'],
+                "pagination": request_data['pagination']
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Application.delete_application(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+
+@app.route('/application-by-student-last-five/<string:id>', methods=['GET'])
+@token_required
+def applicationByStudentLastFive(id):
+    # Extract query parameters
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
+    if request.method == 'GET':
+        try:
+            request_data = Application.get_application_by_student_id_last_five(id, page, per_page)
             msg = {
                 "code": 200,
                 "message": 'Successful',
