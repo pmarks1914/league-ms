@@ -106,6 +106,13 @@ class User(db.Model):
                 'first_name': self.first_name, 
                 'last_name': self.last_name, 
                 'other_name': self.other_name, 
+                'phone': self.phone, 
+                'lat': self.lat, 
+                'lon': self.lon, 
+                'town': self.town, 
+                'city': self.city,
+                'country': self.country,
+                'address': self.address, 
                 # 'logo': self.logo, 
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
@@ -492,6 +499,7 @@ class Application(db.Model):
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    progress = db.Column(db.Integer, nullable=True)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
     programme = db.relationship('Programme', back_populates='application', lazy='select')
@@ -504,6 +512,7 @@ class Application(db.Model):
             'description': self.description,
             'student_id': self.student_id,
             'programme_id': self.programme_id,
+            'progress': self.progress,
             'created_by': self.created_by,
             'updated_by': self.updated_by,
             'created_on': str(self.created_on),
@@ -514,7 +523,7 @@ class Application(db.Model):
     def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
-            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id, updated_by=user_email, created_by=user_email)
+            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id, updated_by=user_email, created_by=user_email, progress=25)
             db.session.add(application)
             db.session.commit()
             logger.info(f"Application created with ID: {application.id}")

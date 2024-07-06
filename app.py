@@ -976,7 +976,7 @@ def upload():
 
 
 @app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
-# @token_required
+@token_required
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
