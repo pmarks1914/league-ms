@@ -111,6 +111,7 @@ def get_token():
                 student_id = student_id.id or None
                 count_stats = {
                     "programme": Programme.countProgramme(),
+                    "school": School.countSchool(),
                 }
 
             msg = { "user": match | {"student_id":  student_id, "count_stats": count_stats}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
