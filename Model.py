@@ -289,6 +289,9 @@ class School(db.Model):
 
         }
 
+    def countSchool():
+        return School.query.count()
+
     def create_school(user_id, name, description, expected_applicantion, user_email):
         _id = str(uuid.uuid4())
         sys.setrecursionlimit(30000)
@@ -520,6 +523,9 @@ class Application(db.Model):
             'student': self.student.to_dict() if self.student else None,
             'programme': self.programme.to_dict() if self.programme else None }
 
+    def countApplicationById(student_id):
+        return Application.query.filter_by(student_id=student_id).count()
+
     def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
@@ -642,6 +648,9 @@ class Programme(db.Model):
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on),
         }
+
+    def countProgramme():
+        return Programme.query.count()
 
     def create_programme(school_id, name, description, user_email):
         _id = str(uuid.uuid4())
