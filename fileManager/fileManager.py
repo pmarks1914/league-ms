@@ -3,7 +3,7 @@ from Model import Fileupload
 import os
 
 
-def fileUploadManager(request, *args):
+def fileUploadManager(request, user_id, *args):
     if 'cert' not in request.files:
         return 'No cert part in the request'
     file = request.files['cert']
@@ -11,9 +11,13 @@ def fileUploadManager(request, *args):
         return 'No selected file'
     try:
         if request.method == 'POST':
-            print(request.files)
-            data_object = Fileupload.createFile(file.filename, file.filename, 'test')
-            print("data_object ", data_object.id)
+            # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
+            doc_type = "Certificate"
+            if str(request.form.get('type')) == "2":
+                doc_type = "Transcript"
+            doc_format = file.content_type.split('/')[1]
+            data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
+            # print("data_object ", data_object.id)
             # save it to the folder
             upload_folder = 'static/uploads'
             file.save( upload_folder + '/' + file.filename)
@@ -22,7 +26,7 @@ def fileUploadManager(request, *args):
             new_filename = data_object.id + '.' + file_type.split('/')[1]
             file_path = os.path.join(upload_folder, new_filename)
             os.rename(os.path.join(upload_folder, file.filename), file_path)
-            return {'message': 'File uploaded successfull', 'statuscode': 200}
+            return {'message': 'File uploaded successfull'}
 
         if request.method == 'PATCH':
             for arg in args:
@@ -36,7 +40,6 @@ def fileUploadManager(request, *args):
                 file_path = os.path.join(upload_folder, new_filename)
                 os.rename(os.path.join(upload_folder, file.filename), file_path)
                 file_data['message'] = 'File uploaded successfully'
-                file_data['statuscode'] = 200
                 return file_data
 
     except Exception as e:

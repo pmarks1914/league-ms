@@ -7,6 +7,7 @@ from locale import currency
 import re
 from textwrap import indent
 from time import timezone
+from flask import request
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import defer, undefer, relationship, load_only, sessionmaker
@@ -24,13 +25,13 @@ from flask_migrate import Migrate
 import json
 # from sendEmail import Email 
 import uuid
-
 import sys
+from dotenv import dotenv_values
 
-
+get_env = dotenv_values(".env") 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
+ 
 list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
 
@@ -105,11 +106,20 @@ class User(db.Model):
                 'first_name': self.first_name, 
                 'last_name': self.last_name, 
                 'other_name': self.other_name, 
+                'phone': self.phone, 
+                'lat': self.lat, 
+                'lon': self.lon, 
+                'town': self.town, 
+                'city': self.city,
+                'country': self.country,
+                'address': self.address, 
                 # 'logo': self.logo, 
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
                 'created_on': str(self.created_on),
-                'updated_on': str(self.updated_on) }
+                'updated_on': str(self.updated_on),
+                'file': [file.to_dict() for file in self.file]
+                }
     def _repr_(self):
         return json.dumps({
                 'id': self.id,
@@ -152,7 +162,7 @@ class User(db.Model):
 
     def getUserById(id):
         new_data = User.query.filter_by(id=id).first()
-        new_data_object = alchemy_to_json(new_data)
+        new_data_object = new_data.json()
         return new_data_object
 
     def getUserByEmail(email):
@@ -279,6 +289,9 @@ class School(db.Model):
 
         }
 
+    def countSchool():
+        return School.query.count()
+
     def create_school(user_id, name, description, expected_applicantion, user_email):
         _id = str(uuid.uuid4())
         sys.setrecursionlimit(30000)
@@ -295,21 +308,17 @@ class School(db.Model):
 
     def get_school_by_two():
         joined_table_data = []
-        try:
-            school = School.query.order_by(func.random()).all() 
-            # school = School.query.order_by(func.random()).limit(2).all() 
-            # Render nested objects
-            if school:
-                logger.info(f"Schools retrieved")
-                for item in school:
-                    joined_table_data.append(item.to_dict_2())
-                # Convert the result to a JSON-formatted string
-            else:
-                logger.warning(f"No schools found")
-            return joined_table_data
-        except Exception as e:
-            logger.error(f"Error retrieving schools: {e}")
-            return str(e)
+        school = School.query.order_by(func.random()).all() 
+        # school = School.query.order_by(func.random()).limit(2).all() 
+        # Render nested objects
+        if school:
+            logger.info(f"Schools retrieved")
+            for item in school:
+                joined_table_data.append(item.to_dict_2())
+            # Convert the result to a JSON-formatted string
+        else:
+            logger.warning(f"No schools found")
+        return joined_table_data
 
     def get_school_by_id(school_id):
         try:
@@ -489,6 +498,7 @@ class Application(db.Model):
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    progress = db.Column(db.Integer, nullable=True)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     student_id = db.Column(db.String(36), db.ForeignKey('student.id'))
     programme = db.relationship('Programme', back_populates='application', lazy='select')
@@ -501,6 +511,7 @@ class Application(db.Model):
             'description': self.description,
             'student_id': self.student_id,
             'programme_id': self.programme_id,
+            'progress': self.progress,
             'created_by': self.created_by,
             'updated_by': self.updated_by,
             'created_on': str(self.created_on),
@@ -508,10 +519,13 @@ class Application(db.Model):
             'student': self.student.to_dict() if self.student else None,
             'programme': self.programme.to_dict() if self.programme else None }
 
+    def countApplicationById(student_id):
+        return Application.query.filter_by(student_id=student_id).count()
+
     def create_application(description, programme_id, student_id, user_email):
         _id = str(uuid.uuid4())
         try:
-            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id, updated_by=user_email, created_by=user_email)
+            application = Application(id=_id, description=description, programme_id=programme_id, student_id=student_id, updated_by=user_email, created_by=user_email, progress=25)
             db.session.add(application)
             db.session.commit()
             logger.info(f"Application created with ID: {application.id}")
@@ -532,6 +546,25 @@ class Application(db.Model):
         except Exception as e:
             logger.error(f"Error retrieving application by ID: {e}")
             raise
+    
+    # get application by student id for last five
+    def get_application_by_student_id_last_five(student_id, page, per_page): 
+        pagination = Application.query.filter_by(student_id=student_id).order_by(Application.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        # Extract the items list for the current page
+        new_data = pagination.items
+        # Render nested objects
+        pagination_data = [Application.application_json(appli) for appli in new_data]
+        # Prepare pagination information to be returned along with the data
+        paging_data = {
+            'total': pagination.total,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': pagination.pages
+        }
+        return {
+            'data': pagination_data,
+            'pagination': paging_data
+        }
 
     # get application by student id
     def get_application_by_student_id(student_id, page, per_page): 
@@ -630,6 +663,9 @@ class Programme(db.Model):
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on),
         }
+
+    def countProgramme():
+        return Programme.query.count()
 
     def create_programme(school_id, name, description, user_email):
         _id = str(uuid.uuid4())
@@ -773,6 +809,7 @@ class Fileupload(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
+    format = db.Column(db.String(80), nullable=True)
     description = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -783,6 +820,21 @@ class Fileupload(db.Model):
     school_id = db.Column(db.String(36), db.ForeignKey('school.id'))
     school = db.relationship('School', back_populates='file', lazy='select')
     
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.file,
+            'type': self.type,
+            'format': self.format,
+            'url': get_env['FILE_STATIC_UPLOAD_PATH'] + str(self.id) + '.' + self.format,
+            'description': self.description,
+            'created_on': str(self.created_on),
+            'updated_on': str(self.updated_on)
+        }
+
+    def countFileById(user_id):
+        return Fileupload.query.filter_by(user_id=user_id).count()
+
     # get file by business
     def getFileById(id, page=1, per_page=10): 
         pagination = Fileupload.query.filter_by(id=id).paginate(page=page, per_page=per_page, error_out=False)
@@ -802,23 +854,21 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _user_id, _school_id):
+    def createFile(_file, _description, _file_type, _doc_format, _user_id):
         _id = str(uuid.uuid4())
-        new_data = Fileupload( file=_file, description=_description, id=_id )
+        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, format=_doc_format, user_id=_user_id)
         try:
             # Start a new session
-            with app.app_context():
-                db.session.add(new_data)
-                db.session.commit()
-                # Refresh the instance to make sure attributes are up-to-date
-                db.session.refresh(new_data)
+            db.session.add(new_data)
+            db.session.commit()
+            return new_data
         except Exception as e:
             db.session.rollback()  # Rollback the transaction in case of an error
-            # return str(e)
+            print(f"Error:: {e}")
         finally:
-            db.session.close()
-        return new_data
-
+            # db.session.close()
+            pass
+ 
     def updateFile(file, description, business, id):
         new_data = Fileupload.query.filter_by(id=id).first()
         if file:

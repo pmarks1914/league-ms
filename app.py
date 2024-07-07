@@ -1,7 +1,7 @@
 from crypt import methods
 import re
 import uuid
-from flask import Flask, jsonify, request, Response, render_template
+from flask import Flask, jsonify, request, Response, render_template, url_for
 import requests, json
 from Helper.helper import generate_random_code
 from fileManager.fileManager import fileUploadManager
@@ -52,6 +52,14 @@ def token_required(f):
             return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
 
+def return_user_id(request):
+    token = request.headers.get('Authorization')
+    msg = {}
+    token = token.split(" ")[1]        
+    token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
+    user_id = token_data['id'] or None
+    return user_id
+
 @app.route('/test', methods=['GET'])
 # @token_required
 def testd():
@@ -90,6 +98,7 @@ def callbackfs():
 @app.route('/login', methods=['POST'])
 def get_token():
     student_id = None
+    count_stats = None
     request_data = request.get_json()
     password_hashed = hashlib.sha256((request_data.get('password')).encode()).hexdigest()
     try:
@@ -100,7 +109,14 @@ def get_token():
             if match['role'] == 'STUDENT':
                 student_id = Student.get_user_by_id(match['id']) or None
                 student_id = student_id.id or None
-            msg = { "user": match | {"student_id":  student_id}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
+                count_stats = {
+                    "programme": Programme.countProgramme(),
+                    "school": School.countSchool(),
+                    "application": Application.countApplicationById(student_id),
+                    "file": Fileupload.countFileById(match['id'])
+                }
+
+            msg = { "user": match | {"student_id":  student_id, "count_stats": count_stats}, "access_key": jwt.decode( token, app.config['SECRET_KEY'], algorithms=['HS256'] ), "token": token }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         else:
@@ -330,9 +346,14 @@ def send_otp():
             return 'Failed to send notification.'
     except Exception as e:
         return str(e)
-@app.route('/')
+@app.route('/static/uploads')
 def index():
     return render_template('/fileUpload.html')
+
+# @app.route('/static/<string:file>')
+# def upload_index_file(file):
+#     file_url = url_for('static', filename=f'uploads/{file}')
+#     return f'The URL for the file is: {file_url}'
 
 @app.route('/user/any', methods=['PATCH'])
 def update_any_user():
@@ -375,11 +396,9 @@ def update_any_user():
 
 @app.route('/user', methods=['GET'])
 def update_any_user_get():
-    token = request.headers.get('Authorization')
     msg = {}
-    token = token.split(" ")[1]        
-    token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
-    user_id = token_data['id'] or None
+    count_stats = None
+    user_id = return_user_id(request)
     try:
         match = User.getUserById(user_id)
         if match != None and match != False:
@@ -388,7 +407,15 @@ def update_any_user_get():
             if match['role'] == 'STUDENT':
                 student_id = Student.get_user_by_id(match['id']) or None
                 student_id = student_id.id or None
-            msg = { "user": match | {"student_id":  student_id} }
+                student_id = Student.get_user_by_id(match['id']) or None
+                student_id = student_id.id or None
+                count_stats = {
+                    "programme": Programme.countProgramme(),
+                    "school": School.countSchool(),
+                    "application": Application.countApplicationById(student_id),
+                    "file": Fileupload.countFileById(match['id'])
+                }
+            msg = { "user": match | {"student_id":  student_id, "count_stats": count_stats} }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
         else:
@@ -453,13 +480,10 @@ def school(id):
  
 @app.route('/school', methods=['POST'])
 def add_school():
-    token = request.headers.get('Authorization')
     msg = {}
-    try:
-        token = token.split(" ")[1]        
-        token_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']) or None
-        data = request.get_json()
-        user_id = token_data['id'] or None
+    try:    
+        data = request.get_json()        
+        user_id = return_user_id(request)
         user_data = User.getUserById(user_id)
         user_email = user_data['email'] or None
         description = data.get('description')
@@ -731,6 +755,43 @@ def applicationByStudent(id):
     else:
         return {"code": 400, "message": 'Failed' }
 
+@app.route('/application-by-student-last-five/<string:id>', methods=['GET'])
+@token_required
+def applicationByStudentLastFive(id):
+    # Extract query parameters
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
+    if request.method == 'GET':
+        try:
+            request_data = Application.get_application_by_student_id_last_five(id, page, per_page)
+            msg = {
+                "code": 200,
+                "message": 'Successful',
+                "data": request_data['data'],
+                "pagination": request_data['pagination']
+            }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    elif request.method == 'DELETE':
+        try:
+            msg = {
+                "code": 404,
+                "message": 'Not found'
+            }
+            if Application.delete_application(id):
+                msg = {
+                    "code": 200,
+                    "message": 'Successful'
+                }
+            response = Response( json.dumps(msg), status=200, mimetype='application/json')
+            return response 
+        except Exception as e:
+            return {"code": 203, "message": 'Failed', "error": str(e)}
+    else:
+        return {"code": 400, "message": 'Failed' }
+
 @app.route('/application', methods=['POST'])
 def add_application():
     token = request.headers.get('Authorization')
@@ -943,16 +1004,20 @@ def update_programme(id):
 
 
 @app.route('/upload', methods=['POST'])
+@token_required
 def upload():
+    user_id = return_user_id(request)
     msg = {
         "code": 403,
         "message": 'Failed',
     }
     if request.method == 'POST':
-        if fileUploadManager(request):
+        data_source = fileUploadManager(request, user_id)
+        if data_source:
             msg = {
                 "code": 200,
                 "message": 'Successful',
+                "other": data_source
             }
             return Response( json.dumps(msg), status=200, mimetype='application/json')
         return Response( json.dumps(msg), status=200, mimetype='application/json')
@@ -965,6 +1030,7 @@ def upload():
 
 
 @app.route('/upload/<string:id>', methods=['PATCH', 'GET'])
+@token_required
 def uploadUpdate(id):
     if request.method == 'GET':
         return Fileupload.getFileById(id)
@@ -976,8 +1042,8 @@ def uploadUpdate(id):
     }
     return Response( json.dumps(msg), status=404, mimetype='application/json')
 
-
 @app.route('/file/delete/<string:id>', methods=['DELETE'])
+@token_required
 def fileDelete(id):
     msg = {
         "code": 403,
