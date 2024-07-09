@@ -84,6 +84,15 @@ def testd():
 @app.route('/token/status', methods=['GET'])
 def testd():
     try:
+        user_id = return_user_id(request)
+        user = User.getUserById(user_id)
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "user": user['data'],
+            "pagination": user['pagination']
+        }
+        response = Response( json.dumps(msg), status=200, mimetype='application/json')
         return response    
     except Exception as e:
         return {"tes": str(e)}
