@@ -82,6 +82,7 @@ def testd():
 
 
 @app.route('/token/status', methods=['GET'])
+@token_required
 def testd():
     try:
         user_id = return_user_id(request)
