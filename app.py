@@ -80,6 +80,14 @@ def testd():
     except Exception as e:
         return {"tes": str(e)}
 
+
+@app.route('/token/status', methods=['GET'])
+def testd():
+    try:
+        return response    
+    except Exception as e:
+        return {"tes": str(e)}
+
 @app.route('/v1/callback/mfs', methods=['POST'])
 def callbackfs():
     try:
