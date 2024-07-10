@@ -80,6 +80,30 @@ def testd():
     except Exception as e:
         return {"tes": str(e)}
 
+
+@app.route('/token/status', methods=['GET'])
+# @token_required
+def token_status():
+    msg = {
+            "code": 404,
+            "status": False,
+            "message": "Failed",
+        }
+    try:
+        user_id = return_user_id(request)
+        user = User.getUserById(user_id)
+        msg = {
+            "code": 200,
+            "message": 'Successful',
+            "user": user,
+        }
+        response = Response( json.dumps(msg), status=200, mimetype='application/json')
+        return response    
+    except Exception as e:
+        # return {"tes": str(e)}
+        response = Response( json.dumps(msg | {"error": str(e)} ), status=200, mimetype='application/json')
+        return response 
+
 @app.route('/v1/callback/mfs', methods=['POST'])
 def callbackfs():
     try:
@@ -764,11 +788,19 @@ def applicationByStudentLastFive(id):
     if request.method == 'GET':
         try:
             request_data = Application.get_application_by_student_id_last_five(id, page, per_page)
+            user_id = return_user_id(request)
+            count_stats = {
+                "programme": Programme.countProgramme(),
+                "school": School.countSchool(),
+                "application": Application.countApplicationById(id),
+                "file": Fileupload.countFileById(user_id)
+            }
             msg = {
                 "code": 200,
                 "message": 'Successful',
                 "data": request_data['data'],
-                "pagination": request_data['pagination']
+                "pagination": request_data['pagination'],
+                "count_stats": count_stats
             }
             response = Response( json.dumps(msg), status=200, mimetype='application/json')
             return response 
