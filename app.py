@@ -94,6 +94,7 @@ def token_status():
         user = User.getUserById(user_id)
         msg = {
             "code": 200,
+            "status": True,
             "message": 'Successful',
             "user": user,
         }
