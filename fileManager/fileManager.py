@@ -40,6 +40,9 @@ def fileUploadManager(request, user_id, *args):
             os.rename(os.path.join(upload_folder, file.filename), file_path)
 
             
+            # Example: Upload a file to S3
+            bucket_name = 'league-ms-s3'
+            # Upload the file to S3
             try:
                 # os.remove(local_file_path)  # Clean up the local file after upload
                 return {'message': 'File uploaded successfull'}
