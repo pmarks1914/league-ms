@@ -43,6 +43,7 @@ def fileUploadManager(request, user_id, *args):
             # Example: Upload a file to S3
             bucket_name = 'league-ms-s3'
             local_file_path = file_path
+            s3_object_name = new_filename
             # Upload the file to S3
             try:
                 # os.remove(local_file_path)  # Clean up the local file after upload
