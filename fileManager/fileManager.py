@@ -1,6 +1,18 @@
 import mimetypes
 from Model import Fileupload
 import os
+import boto3
+from dotenv import dotenv_values
+
+get_env = dotenv_values(".env")  
+# Initialize a session using your access keys
+session = boto3.Session(
+    aws_access_key_id=get_env['AWS_ACCESS_KEY_ID']  ,
+    aws_secret_access_key=get_env['AWS_SECRET_ACCESS_KEY']  ,
+    region_name=get_env['REGION_NAME']  
+)
+# Initialize S3 client
+s3 = session.client('s3')
 
 
 def fileUploadManager(request, user_id, *args):
@@ -26,7 +38,18 @@ def fileUploadManager(request, user_id, *args):
             new_filename = data_object.id + '.' + file_type.split('/')[1]
             file_path = os.path.join(upload_folder, new_filename)
             os.rename(os.path.join(upload_folder, file.filename), file_path)
-            return {'message': 'File uploaded successfull'}
+
+            
+            # Example: Upload a file to S3
+            bucket_name = 'league-ms-s3'
+            local_file_path = file_path
+            s3_object_name = new_filename
+            # Upload the file to S3
+            try:
+                # os.remove(local_file_path)  # Clean up the local file after upload
+                return {'message': 'File uploaded successfull'}
+            except Exception as e:
+                return {'message': 'File uploaded successfull', 'error': str(e)}
 
         if request.method == 'PATCH':
             for arg in args:
