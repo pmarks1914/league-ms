@@ -29,7 +29,6 @@ def fileUploadManager(request, user_id, *args):
                 doc_type = "Transcript"
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
-            # print("data_object ", data_object.id)
             # save it to the folder
             upload_folder = 'static/uploads'
             file.save( upload_folder + '/' + file.filename)
