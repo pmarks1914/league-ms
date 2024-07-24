@@ -46,7 +46,7 @@ def fileUploadManager(request, user_id, *args):
             s3_object_name = new_filename
             # Upload the file to S3
             try:
-                s3.upload_file(local_file_path, bucket_name, s3_object_name)
+                s3.upload_file(local_file_path, bucket_name, s3_object_name, ExtraArgs={'ContentDisposition': 'inline'} )
                 # os.remove(local_file_path)  # Clean up the local file after upload
                 return {'message': 'File uploaded successfull'}
             except Exception as e:
