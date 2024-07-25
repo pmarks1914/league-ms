@@ -109,7 +109,6 @@ def token_status():
 def callbackfs():
     try:
         request_data = request.json
-        # print("mfs callback >>> ", request_data )
         msg = {
             "code": 200,
             "message": 'Successful',
