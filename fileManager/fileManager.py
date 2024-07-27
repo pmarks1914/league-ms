@@ -39,7 +39,7 @@ def fileUploadManager(request, user_id, *args):
             file_path = os.path.join(upload_folder, new_filename)
             os.rename(os.path.join(upload_folder, file.filename), file_path)
 
-            # Example: Upload a file to S3
+            # S3
             bucket_name = 'league-ms-s3'
             local_file_path = file_path
             s3_object_name = new_filename
