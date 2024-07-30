@@ -81,7 +81,6 @@ class User(db.Model):
     first_name = db.Column(db.String(80), nullable=True)
     last_name = db.Column(db.String(80), nullable=True)
     other_name = db.Column(db.String(80), nullable=True)
-    country = db.Column(db.String(80), nullable=True)
     active_status = db.Column(db.String(80), nullable=True)
     created_by = db.Column(db.String(80), nullable=True)
     updated_by = db.Column(db.String(80), nullable=True)
