@@ -31,6 +31,10 @@ def fileUploadManager(request, user_id, *args):
             doc_type = "Certificate"
             if str(request.form.get('type')) == "2":
                 doc_type = "Transcript"
+            if str(request.form.get('type')) == "3":
+                doc_type = "Identification Document"
+            if str(request.form.get('type')) == "4":
+                doc_type = "Evaluation Reports"
                 
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
