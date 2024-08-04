@@ -812,6 +812,10 @@ class Fileupload(db.Model):
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     format = db.Column(db.String(80), nullable=True)
+
+    is_official = db.Column(db.String(80), nullable=True)
+    issued_date = db.Column(db.DateTime(), nullable=True)
+
     description = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
