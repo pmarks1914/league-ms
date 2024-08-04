@@ -35,6 +35,8 @@ def fileUploadManager(request, user_id, *args):
                 doc_type = "Identification Document"
             if str(request.form.get('type')) == "4":
                 doc_type = "Evaluation Reports"
+            if str(request.form.get('type')) == "5":
+                doc_type = "Letters of Recommendation"
                 
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
