@@ -23,6 +23,7 @@ def fileUploadManager(request, user_id, *args):
     if 'cert' not in request.files:
         return 'No cert part in the request'
     file = request.files['cert']
+    print(request.files['cert'])
     if file.filename == '':
         return 'No selected file'
     try:
@@ -34,9 +35,9 @@ def fileUploadManager(request, user_id, *args):
             if str(request.form.get('type')) == "3":
                 doc_type = "Identification Document"
             if str(request.form.get('type')) == "4":
-                doc_type = "Evaluation Reports"
+                doc_type = "Evaluation Report"
             if str(request.form.get('type')) == "5":
-                doc_type = "Letters of Recommendation"
+                doc_type = "Letter of Recommendation"
                 
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
