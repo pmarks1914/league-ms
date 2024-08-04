@@ -15,6 +15,9 @@ s3 = boto3.client(
 # Initialize S3 client
 # s3 = session.client('s3')
 
+#    - Identification Document (Passport, ID Card)
+#    - Previous Credential Evaluation Reports (if any)
+#    - Letters of Recommendation (if applicable)
 
 def fileUploadManager(request, user_id, *args):
     if 'cert' not in request.files:
@@ -28,6 +31,13 @@ def fileUploadManager(request, user_id, *args):
             doc_type = "Certificate"
             if str(request.form.get('type')) == "2":
                 doc_type = "Transcript"
+            if str(request.form.get('type')) == "3":
+                doc_type = "Identification Document"
+            if str(request.form.get('type')) == "4":
+                doc_type = "Evaluation Reports"
+            if str(request.form.get('type')) == "5":
+                doc_type = "Letters of Recommendation"
+                
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
             # save it to the folder

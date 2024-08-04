@@ -11,7 +11,7 @@ from Notification.Email.sendEmail import send_notification_email
 # from sendEmail import Email 
 from Settings import *
 import jwt, datetime
-from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+# from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from functools import wraps
 from flask_cors import CORS
 import hashlib
@@ -44,10 +44,10 @@ def token_required(f):
         try:
             jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             return f(*args, **kwargs)
-        except ExpiredSignatureError :
-            return jsonify({'error': 'Token has expired', 'code': 401}), 401
-        except InvalidTokenError:
-            return jsonify({'error': 'Invalid Token', 'code': 401}), 401
+        # except ExpiredSignatureError :
+        #     return jsonify({'error': 'Token has expired', 'code': 401}), 401
+        # except InvalidTokenError:
+        #     return jsonify({'error': 'Invalid Token', 'code': 401}), 401
         except Exception as e:
             return jsonify({'error': str(e), 'code': 401}), 401
     return wrapper
@@ -1098,5 +1098,5 @@ def fileDelete(id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5002)
+    app.run(debug=True, host='0.0.0.0', port=5002)
 
