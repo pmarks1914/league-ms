@@ -815,6 +815,7 @@ class Fileupload(db.Model):
 
     is_official = db.Column(db.Boolean, nullable=True)
     issued_date = db.Column(db.DateTime(), nullable=True)
+    slug = db.Column(db.String(80), nullable=True)
 
     description = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
