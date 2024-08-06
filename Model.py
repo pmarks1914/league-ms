@@ -236,10 +236,9 @@ class User(db.Model):
             user = db.session.query(User).filter(User.id == user_id).one_or_none() or []
             if user:
                 for key, value in kwargs.items():
-                    if key == "other_info":
-                        print(str(user.other_info['other_info']))
-                        user.other_info =  user.other_info['other_info'] | {key: value}
-                        pass
+                    # allow for other info
+                    if key in ["user_preference_email", "user_preference_phone", "purpose_evaluation"]:
+                        user.other_info = user.other_info | {key: value}
                     else:
                         setattr(user, key, value)
                 user.updated_on = datetime.utcnow()
