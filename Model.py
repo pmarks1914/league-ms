@@ -10,6 +10,7 @@ from time import timezone
 from flask import request
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import defer, undefer, relationship, load_only, sessionmaker
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -92,6 +93,7 @@ class User(db.Model):
     lat = db.Column(db.String(25), nullable=True)
     dob = db.Column(db.DateTime(), nullable=True)
     phone = db.Column(db.String(15), nullable=True)
+    other_info = db.Column(JSON, nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     school = db.relationship('School',  back_populates='user', lazy='joined')
@@ -113,6 +115,7 @@ class User(db.Model):
                 'city': self.city,
                 'country': self.country,
                 'address': self.address, 
+                'other_info': self.other_info,
                 # 'logo': self.logo, 
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
@@ -129,6 +132,7 @@ class User(db.Model):
                 'last_name': self.last_name, 
                 'other_name': self.other_name, 
                 'country': self.country, 
+                'other_info': self.other_info,
                 'created_by': self.created_by,
                 'updated_by': self.updated_by,
                 'created_on': self.created_on,
@@ -232,7 +236,12 @@ class User(db.Model):
             user = db.session.query(User).filter(User.id == user_id).one_or_none() or []
             if user:
                 for key, value in kwargs.items():
-                    setattr(user, key, value)
+                    if key == "other_info":
+                        print(str(user.other_info['other_info']))
+                        user.other_info =  user.other_info['other_info'] | {key: value}
+                        pass
+                    else:
+                        setattr(user, key, value)
                 user.updated_on = datetime.utcnow()
                 user.updated_by = updated_by
                 db.session.commit()
@@ -812,11 +821,8 @@ class Fileupload(db.Model):
     file = db.Column(db.String(80), nullable=True)
     type = db.Column(db.String(80), nullable=True)
     format = db.Column(db.String(80), nullable=True)
-
-    is_official = db.Column(db.Boolean, nullable=True)
     issued_date = db.Column(db.DateTime(), nullable=True)
     slug = db.Column(db.String(80), nullable=True)
-
     description = db.Column(db.String(80), nullable=True)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -861,9 +867,10 @@ class Fileupload(db.Model):
             'pagination': pagination_data
         }
 
-    def createFile(_file, _description, _file_type, _doc_format, _user_id):
+    def createFile(_file, _description, _file_type, _doc_format, _user_id, _issued_date, _slug):
         _id = str(uuid.uuid4())
-        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, format=_doc_format, user_id=_user_id)
+        new_data = Fileupload( file=_file, description=_description, id=_id, type=_file_type, format=_doc_format, user_id=_user_id, issued_date=_issued_date, slug=_slug)
+
         try:
             # Start a new session
             db.session.add(new_data)

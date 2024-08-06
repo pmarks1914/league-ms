@@ -18,29 +18,40 @@ s3 = boto3.client(
 #    - Identification Document (Passport, ID Card)
 #    - Previous Credential Evaluation Reports (if any)
 #    - Letters of Recommendation (if applicable)
-
+ 
 def fileUploadManager(request, user_id, *args):
     if 'cert' not in request.files:
         return 'No cert part in the request'
     file = request.files['cert']
+    
+    issued_date = request.form.get('issued_date')
+    slug = ''
+
     print(request.files['cert'])
     if file.filename == '':
         return 'No selected file'
     try:
         if request.method == 'POST':
             # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
-            doc_type = "Certificate"
+            doc_type = ""
+            if str(request.form.get('type')) == "1":
+                doc_type = "Certificate"
+                slug = request.form.get('slug')
             if str(request.form.get('type')) == "2":
                 doc_type = "Transcript"
+                slug = request.form.get('slug')
             if str(request.form.get('type')) == "3":
                 doc_type = "Identification Document"
+                slug = "Identification Document"
             if str(request.form.get('type')) == "4":
                 doc_type = "Evaluation Report"
+                slug = "Identification Document"
             if str(request.form.get('type')) == "5":
                 doc_type = "Letter of Recommendation"
+                slug = "Identification Document"
                 
             doc_format = file.content_type.split('/')[1]
-            data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id)
+            data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id, issued_date, slug)
             # save it to the folder
             upload_folder = 'static/uploads'
             file.save( upload_folder + '/' + file.filename)
