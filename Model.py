@@ -238,7 +238,10 @@ class User(db.Model):
                 for key, value in kwargs.items():
                     # allow for other info
                     if key in list_other_info:
-                        user.other_info = user.other_info | {key: value}
+                        if user.other_info:
+                            user.other_info = user.other_info | {key: value}
+                        else:
+                            user.other_info = {key: value}
                     else:
                         setattr(user, key, value)
                 user.updated_on = datetime.utcnow()
