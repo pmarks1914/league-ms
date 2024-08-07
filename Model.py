@@ -841,7 +841,7 @@ class Fileupload(db.Model):
             'name': self.file,
             'type': self.type,
             'format': self.format,
-            'url': get_env['FILE_STATIC_UPLOAD_PATH'] + str(self.id) + '.' + self.format,
+            'url': get_env['FILE_STATIC_UPLOAD_PATH_READ'] + str(self.id) + '.' + self.format,
             'description': self.description,
             'created_on': str(self.created_on),
             'updated_on': str(self.updated_on)
