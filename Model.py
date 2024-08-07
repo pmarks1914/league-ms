@@ -35,7 +35,7 @@ migrate = Migrate(app, db)
  
 list_account_status = ['PENDING', 'APPROVED', 'REJECTED']
 list_status = ['PENDING', 'SUCCESSFULL', 'FAILED']
-
+list_other_info = ["user_preference_email", "user_preference_phone", "purpose_evaluation", "institution_name", "department_office", "contact_person", "contact_person_email", "payment_method", "billing_address", "verification_status", "reference_email", "reference_phone"]
 
 def alchemy_to_json(obj, visited=None):
     if visited is None:
@@ -237,7 +237,7 @@ class User(db.Model):
             if user:
                 for key, value in kwargs.items():
                     # allow for other info
-                    if key in ["user_preference_email", "user_preference_phone", "purpose_evaluation"]:
+                    if key in list_other_info:
                         user.other_info = user.other_info | {key: value}
                     else:
                         setattr(user, key, value)
