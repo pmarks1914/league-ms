@@ -39,6 +39,10 @@ def fileUploadManager(request, user_id, *args):
         if request.method == 'POST':
             # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
             doc_type = ""
+            if str(request.form.get('type')) == "0":
+                doc_type = "Photo"
+                slug = doc_type
+                issued_date = None
             if str(request.form.get('type')) == "1":
                 doc_type = "Certificate"
                 slug = request.form.get('slug')
