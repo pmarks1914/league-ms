@@ -37,7 +37,6 @@ def fileUploadManager(request, user_id, *args):
         return {'message': 'No selected file', 'status': False}
     try:
         if request.method == 'POST':
-            # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
             doc_type = ""
             if str(request.form.get('type')) == "0":
                 doc_type = "Photo"
