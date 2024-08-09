@@ -20,16 +20,21 @@ s3 = boto3.client(
 #    - Letters of Recommendation (if applicable)
  
 def fileUploadManager(request, user_id, *args):
-    if 'cert' not in request.files:
-        return 'No cert part in the request'
-    file = request.files['cert']
-    
-    issued_date = request.form.get('issued_date')
+    file = ""
+    issued_date = ""
     slug = ''
+    # if 'cert' or 'photo' not in request.files:
+    #     return {'message': 'No cert part in the request', 'status': False} 
+    print("photo", request.form.get('photo'))  
+    if 'photo' in request.files:     
+        file = request.files['photo']
+    elif 'cert' in request.files:
+        file = request.files['cert']
+   
 
-    print(request.files['cert'])
+    print("file", file)
     if file.filename == '':
-        return 'No selected file'
+        return {'message': 'No selected file', 'status': False}
     try:
         if request.method == 'POST':
             # print(request.form.get('name'), file.content_type.split('/')[1], file.content_type)
@@ -37,18 +42,23 @@ def fileUploadManager(request, user_id, *args):
             if str(request.form.get('type')) == "1":
                 doc_type = "Certificate"
                 slug = request.form.get('slug')
+                issued_date = request.form.get('issued_date')
             if str(request.form.get('type')) == "2":
                 doc_type = "Transcript"
                 slug = request.form.get('slug')
+                issued_date = request.form.get('issued_date')
             if str(request.form.get('type')) == "3":
                 doc_type = "Identification Document"
                 slug = "Identification Document"
+                issued_date = request.form.get('issued_date')
             if str(request.form.get('type')) == "4":
                 doc_type = "Evaluation Report"
                 slug = "Identification Document"
+                issued_date = request.form.get('issued_date')
             if str(request.form.get('type')) == "5":
                 doc_type = "Letter of Recommendation"
                 slug = "Identification Document"
+                issued_date = request.form.get('issued_date')
                 
             doc_format = file.content_type.split('/')[1]
             data_object = Fileupload.createFile(file.filename, file.filename, doc_type, doc_format, user_id, issued_date, slug)
@@ -72,10 +82,10 @@ def fileUploadManager(request, user_id, *args):
                     'ContentType': str(file_type),
                     'ContentDisposition': 'inline'
                 } )
-                # os.remove(local_file_path)  # Clean up the local file after upload
-                return {'message': 'File uploaded successfull'}
+                os.remove(local_file_path)  # Clean up the local file after upload
+                return {'message': 'File uploaded successfull', 'status': True}
             except Exception as e:
-                return {'message': 'File uploaded successfull', 'error': str(e)}
+                return {'message': 'File uploaded failed.', 'status': False, 'error': str(e)}
 
         if request.method == 'PATCH':
             for arg in args:
@@ -92,5 +102,5 @@ def fileUploadManager(request, user_id, *args):
                 return file_data
 
     except Exception as e:
-        return f'{str(e)} file'
+        return {'message': 'File uploading failed', 'status': False, 'error': str(e)}
 

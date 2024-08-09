@@ -1045,13 +1045,20 @@ def upload():
     }
     if request.method == 'POST':
         data_source = fileUploadManager(request, user_id)
-        if data_source:
+        print(data_source)
+        if data_source['status']:
             msg = {
                 "code": 200,
                 "message": 'Successful',
                 "other": data_source
             }
             return Response( json.dumps(msg), status=200, mimetype='application/json')
+        
+        msg = {
+            "code": 500,
+            "message": 'Failed',
+            "other": data_source
+        }
         return Response( json.dumps(msg), status=200, mimetype='application/json')
     else:
         msg = {
